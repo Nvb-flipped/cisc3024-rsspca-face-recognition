@@ -11,4 +11,6 @@ The Prompt 01 search screened recent primary methods for a direct change to PCA 
 
 Before implementing the digit runner, Codex checked the two-pixel direction with rational arithmetic and tested a one-direction update and PCA/3-NN using the development partition. After the student requested a face-primary project, the face gate tested the unchanged solver on a 16 × 16 grid using only fitting rows. Both probes passed before the respective holdout evaluations. [Gate outputs for digits](../../results/gate_probe.json) · [Gate outputs for faces](../../results/faces/gate.json) · [Face decision chronology](../face_pivot_decision.md)
 
+The final audit located an author-linked RSLDA+ MATLAB solver. The table reflects the original screening, and the face study retains its locked RSSPCA protocol. [RSLDA+ solver](https://github.com/EMXlight/RSLDAplus)
+
 [RSSPCA](https://doi.org/10.1371/journal.pone.0323281) · [DLR-2DPCA](https://doi.org/10.1109/TCE.2025.3602258) · [SCRAMBLE](https://doi.org/10.1007/s11634-025-00656-3) · [RSLDA+](https://doi.org/10.1016/j.patcog.2024.110512)

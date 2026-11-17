@@ -40,7 +40,7 @@ The five final training masks use seeds 8301--8305 at each positive severity. Cl
 \subsection{Held-out identification}
 
 \begin{table}[H]\small\centering
-\caption{Locked study holdout accuracy (\%). Positive-severity entries are mean $\pm$ sample SD over five training masks. Macro-F1 is averaged at 50\% corruption.}
+\caption{Locked study holdout accuracy (\%). Positive-severity accuracy entries are mean $\pm$ sample SD over five training masks. The last column shows mean macro-F1 as a percentage at 50\% corruption.}
 \label{tab:facemet}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
@@ -51,7 +51,7 @@ Method & Coordinates & Clean & 25\% & 50\% & Macro-F1 at 50\%\\
 \end{tabular}
 \end{table}
 
-\reportfigure{face_recognition}{Identification on the same 80 clean test faces. A, clean accuracy and the means (lines) and individual masks (small points) at positive severities. Raw pixels use 256 coordinates and other arms use 16. B, paired accuracy differences in percentage points for five masks per severity. Open symbols mark mean differences. Positive values favor RSSPCA.}{fig:recognition}
+\reportfigure{face_recognition}{Identification on the same 80 clean test faces. A, the single clean score or mean (large markers), with five mask scores (small markers) at each positive severity. The accuracy window is 45--95\%. Raw pixels use 256 coordinates and the other arms 16. B, paired differences in percentage points. Open markers show means, and positive values favor RSSPCA. Spans show the observed mask ranges in both panels. Small offsets separate overlapping scores.}{fig:recognition}
 
 The three PCA-family arms each classified 66 of 80 clean views correctly. At 25\% corruption, RSSPCA improved over PCA by 2.00 percentage points on average (paired range $-3.75$ to $+6.25$). At 50\% the difference was $+2.75$ points (range $-7.50$ to $+10.00$). In the severe condition it beat PCA on three masks, tied on one and lost on one. This supports an average advantage under these masks while showing that the sign of the effect is sensitive to the corruption realization.
 
@@ -62,7 +62,7 @@ One additional correct face changes accuracy by 1.25 percentage points. The agre
 \clearpage
 \subsection{Spatial loadings and the smoothing ablation}
 
-\reportfigure{face_loadings}{First four unit loading maps in each method's extraction order, from the 50\% training mask at seed 8301. Loadings shown in the same column are not matched across methods. The largest absolute coefficient is oriented nonnegative. All maps share a zero-centered weight scale. Row annotations average grid energy over the first 16 directions.}{fig:faceload}
+\reportfigure{face_loadings}{First four unit loading maps in each method's extraction order, from the 50\% training mask at seed 8301. Columns show order within each fit. Each map is oriented so its coefficient of greatest magnitude is nonnegative. All maps share a zero-centered weight scale. Row annotations average grid energy over the first 16 directions.}{fig:faceload}
 
 At 50\%, RSSPCA averaged grid energy 1.226 versus 2.440 without smoothing. For unit directions this is the sum of squared coefficient differences on the 480 edges. It dropped about 50\% when the graph term was enabled. The fraction of coefficients with absolute value at most $10^{-3}$ fell from 2.67\% to 1.97\%, averaging over the five masks at 16 coordinates. The chosen threshold counts small weights, so it describes coefficient magnitudes rather than exact support recovery. These changes are consistent with smoothing spreading weight across adjacent pixels. The paired recognition contrasts in Figure~\ref{fig:recognition} measure the smaller change in identification.
 
@@ -81,7 +81,7 @@ Median fit time at 16 coordinates was 153.0 ms for RSSPCA, 142.3 ms without smoo
 \clearpage
 \subsection{Feature budget and reconstruction fidelity}
 
-\reportfigure{face_budget}{Sensitivity to coordinate budget at 50\% corrupted training. The dashed guide marks the primary budget of 16. Points and whiskers give means and sample SDs over five masks on the same 80 clean test views. A, identification. B, mean per-pixel reconstruction MSE multiplied by $10^3$, measured before clipping.}{fig:facebudget}
+\reportfigure{face_budget}{Sensitivity to coordinate budget at 50\% corrupted training. Points and whiskers give means and sample SDs over five masks on the same 80 clean test views. Small horizontal offsets separate methods at each tested budget. The dashed guide marks the primary budget of 16. A, identification, displayed from 40 to 80\%. B, mean per-pixel reconstruction MSE multiplied by $10^3$, measured before clipping.}{fig:facebudget}
 
 At 50\%, increasing the RSSPCA budget from 8 to 16 to 24 raised accuracy from 57.00\% to 58.25\% to 59.75\%. LDA improved from 59.75\% to 68.25\% to 70.75\%. The comparison at 24 coordinates is a prespecified sensitivity result. The primary budget remains 16. Increasing the budget lets additional variation reach the classifier, and the different gains show that useful identity information is distributed differently across the fitted directions.
 

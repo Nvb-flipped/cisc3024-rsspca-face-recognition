@@ -15,9 +15,39 @@
     "LatinModernMath-Regular",
     "LatinModernMath-Regular-Identity-H"
   ],
-  "sha256": "6fe137334b4806c135e2d1beeb68de046c8a972a517edebb1e8b4c481eab7f26",
+  "sha256": "b294afe966692d2aca5251f3ead251f470cacb291f937ef1f469429d635718e3",
   "reflection_matches_prior": true,
-  "unchanged_pages": 15,
+  "figure_pages": [
+    1,
+    4,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "figure_collision_and_type_checks": 8,
+  "panel_alignment_checks": 5,
+  "checked_prompt_excerpts": 4,
+  "archived_metrics_and_settings_intact": true,
+  "bibliography_and_diagrams": [
+    "https://doi.org/10.1007/s11634-025-00656-3",
+    "https://doi.org/10.1016/j.patcog.2024.110512",
+    "https://doi.org/10.1080/14786440109462720",
+    "https://doi.org/10.1109/TCE.2025.3602258",
+    "https://doi.org/10.1109/TPAMI.2008.114",
+    "https://doi.org/10.1111/j.1469-1809.1936.tb02137.x",
+    "https://doi.org/10.1371/journal.pone.0323281",
+    "https://doi.org/10.24432/C50P49",
+    "https://doi.org/10.48550/arXiv.2609.00065",
+    "https://github.com/EMXlight/RSLDAplus",
+    "https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition",
+    "https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition/wiki",
+    "https://github.com/yuzhounh/RSSPCA",
+    "https://scikit-learn.org/stable/datasets/real_world.html#the-olivetti-faces-dataset",
+    "https://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html"
+  ],
   "visually_inspected_pages": [
     1,
     2,
@@ -39,12 +69,13 @@
     18,
     19
   ],
-  "wiki_commit": "e9047ff6180a42e0b737c4eb28e5c8955954d170",
+  "wiki_commit": "80edb6fad33734002b7901f693abefb0bd46e422",
   "public_wiki_pages_verified": 8,
   "anonymous_clone_replay": {
-    "face_predictions": 143,
     "face_reconstruction_arrays": 99,
+    "face_predictions": 143,
     "digit_predictions": 165,
-    "tests": 13
+    "tests": 13,
+    "source_commit": "59c5b1d493092dcc408c0cbc576f2c23a2bbe96a"
   }
 }

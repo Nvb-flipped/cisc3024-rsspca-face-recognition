@@ -60,7 +60,7 @@ For invertible $D$, putting $p=Du$ gives the published zero-safe form $p=D(D+\et
  p=Ht .
  \label{eq:spd}
 \end{equation}
-The identity $H(D+\eta I+\gamma LD)=MH$ ensures equivalent outputs even with zero entries in $D$ when $\eta>0$. The nonsymmetric system is invertible because it is similar to the positive-definite block on the nonzero coordinates and has diagonal $\eta I$ in its remaining block. Also $M\succeq\eta I$. The grid has maximum degree four, so $\|L\|_2\le8$. With unit $w$, \(\kappa_2(M)\le(\eta+1+8\gamma)/\eta\). At the selected face setting this conservative bound is 3401. The implementation solves the system using a Cholesky-based routine.
+Set $B=D+\eta I+\gamma LD$. When some entries of $D$ vanish, order the nonzero coordinates first. Then $B$ is block lower triangular because each zero coordinate contributes only $\eta$ on its column diagonal. The nonzero block is similar to the corresponding positive-definite block of $M$ via $H$ restricted to those coordinates. The other diagonal block is $\eta I$, so $B$ is invertible. Now $HB=MH$ gives $HB^{-1}v=M^{-1}Hv$ and both formulations yield the same $p$. Since $M\succeq\eta I$, $\|L\|_2\le8$ by the maximum grid degree four, and $\|D\|_2\le1$, the condition number obeys $\kappa_2(M)\le(\eta+1+8\gamma)/\eta$. This is 3401 at the chosen face setting. The code uses a Cholesky-based solve.
 
 \subsection{Worked example and stopping interpretation}
 

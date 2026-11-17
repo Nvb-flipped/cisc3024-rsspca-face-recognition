@@ -45,7 +45,7 @@ def workflow():
         ("Codex searches", "Screen four methods\nand pass the gates"),
         ("Codex evaluates", "Build, freeze and test\nthe two studies"),
         ("Codex reviews", "Replay, audit and\nrevise report figures"),
-        ("Verified outputs", "Results, tests, source\nand inspected PDF"),
+        ("Verified outputs", "Results, tests, PDF\nand public source"),
     ]
     width, height = .215, .365
     positions = [(x, .60) for x in (.01, .264, .518, .772)]
@@ -142,8 +142,8 @@ def mask_figure(dev, models, case, cfg):
         values = np.zeros(cfg["image_shape"], dtype=np.uint8)
         values[top:top+size, left:left+size] = patch+1
         ax.imshow(values, cmap=ListedColormap(colors), interpolation="nearest", vmin=0, vmax=2)
-        ax.set(title=f"Source row {dev[row]}", xlabel="Pixel column", xticks=(0, 7, 15),
-               yticks=(0, 7, 15))
+        ax.set(title=f"Source row {dev[row]}", xlabel="Pixel column", xticks=(0, 5, 10, 15),
+               yticks=(0, 5, 10, 15))
     axes[0].set_ylabel("Pixel row")
     legend = [Patch(color=color, label=label) for color, label in
               zip(colors, ("Untouched", "Replaced with 0", "Replaced with 1"), strict=True)]
@@ -171,22 +171,26 @@ def loadings(rows, models, cfg):
 
 
 def recognition(rows, cfg):
-    fig, (acc, diff) = plt.subplots(1, 2, figsize=(7.1, 3.10), layout="constrained")
+    fig, (acc, diff) = plt.subplots(1, 2, figsize=(7.1, 3.25), layout="constrained")
     fractions, rank = cfg["fractions"], cfg["primary_rank"]
     for j, method in enumerate(METHODS):
         k = 256 if method == "Pixels" else rank
-        offset = (j - 2) * .065
+        offset = (j - 2) * .14
+        color, marker = COLORS[method], MARKERS[method]
         averages = []
         for i, f in enumerate(fractions):
             a = 100 * data(rows, method, f, k, "accuracy")
             averages.append(a.mean())
             if len(a) > 1:
-                acc.scatter(i+offset+np.linspace(-.022, .022, len(a)), a,
-                            color=COLORS[method], alpha=.55, s=14, linewidths=0)
-        acc.plot(np.arange(3)+offset, averages, marker=MARKERS[method], ms=4.5,
-                 color=COLORS[method], label=method)
+                position = i + offset
+                acc.vlines(position, a.min(), a.max(), color=color, lw=.7, alpha=.48)
+                acc.scatter(position + np.linspace(-.032, .032, len(a)), a,
+                            marker=marker, color=color, alpha=.57, s=13, linewidths=0)
+        acc.scatter(np.arange(len(fractions))+offset, averages, marker=marker, s=29,
+                    color=color, edgecolor="white", linewidth=.5, label=method, zorder=4)
     acc.set(title="A  Known-identity recognition", ylabel="Accuracy (%)", xlabel="Training rows corrupted",
-            xticks=range(3), xticklabels=["0%", "25%", "50%"], ylim=(0, 103))
+            xticks=range(3), xticklabels=["0%", "25%", "50%"], xlim=(-.44, 2.44),
+            ylim=(45, 95), yticks=(50, 60, 70, 80, 90))
     acc.grid(axis="y")
     acc.legend(loc="upper center", bbox_to_anchor=(.5, -.25), ncol=3,
                columnspacing=.75, handlelength=1.15, borderaxespad=0)
@@ -199,12 +203,14 @@ def recognition(rows, cfg):
             delta = 100*(data(rows, "RSSPCA", f, rank, "accuracy")-
                          data(rows, method, f, rank, "accuracy"))
             position = i + (-.15 if j == 0 else .15)
+            diff.hlines(position, delta.min(), delta.max(), color=color, lw=.7, alpha=.48)
             diff.scatter(delta, position+np.linspace(-.045, .045, len(delta)),
                          color=color, marker=marker, alpha=.55, s=16, linewidths=0)
             diff.scatter(delta.mean(), position, edgecolor=color, facecolor="white", marker=marker,
                          s=42, label=f"{f:.0%} corruption" if i==0 else None, zorder=4)
     diff.set(title="B  Matched-mask contrasts", xlabel="RSSPCA minus comparator (pp)",
-             yticks=range(3), yticklabels=contrast_order, ylim=(2.7, -.65))
+             xticks=(-20, -10, 0, 10), xlim=(-25, 12.5),
+             yticks=range(3), yticklabels=contrast_order, ylim=(2.55, -.55))
     diff.grid(axis="x")
     diff.legend(loc="upper center", bbox_to_anchor=(.5, -.25), ncol=2,
                 columnspacing=.9, handlelength=1, borderaxespad=0)
@@ -212,22 +218,28 @@ def recognition(rows, cfg):
 
 
 def budget(rows, cfg):
-    fig, (acc, err) = plt.subplots(1, 2, figsize=(7.1, 2.8), layout="constrained")
+    fig, (acc, err) = plt.subplots(1, 2, figsize=(7.1, 3.1), layout="constrained")
     ranks = np.array(cfg["ranks"])
-    for method in METHODS[1:]:
+    reduced = METHODS[1:]
+    for index, method in enumerate(reduced):
         accuracies = [100 * data(rows, method, .5, k, "accuracy") for k in ranks]
-        acc.errorbar(ranks, [v.mean() for v in accuracies], yerr=[v.std(ddof=1) for v in accuracies],
-                     marker=MARKERS[method], color=COLORS[method], capsize=2, label=method, lw=1.2)
+        x = ranks + .42*(index-(len(reduced)-1)/2)
+        weight = 1.45 if method == "RSSPCA" else 1.05
+        acc.errorbar(x, [v.mean() for v in accuracies], yerr=[v.std(ddof=1) for v in accuracies],
+                     marker=MARKERS[method], color=COLORS[method], capsize=2, label=method,
+                     lw=weight, markersize=4.8)
         if method in PCA_FAMILY:
             errors = [1000 * data(rows, method, .5, k, "mean_mse") for k in ranks]
-            err.errorbar(ranks, [v.mean() for v in errors], yerr=[v.std(ddof=1) for v in errors],
+            x = ranks + .42*(PCA_FAMILY.index(method)-1)
+            err.errorbar(x, [v.mean() for v in errors], yerr=[v.std(ddof=1) for v in errors],
                          marker=MARKERS[method], color=COLORS[method], capsize=2,
-                         label=method, lw=1.2)
+                         label=method, lw=weight, markersize=4.8)
     acc.set(title="A  Recognition", xlabel="Projected coordinates", ylabel="Accuracy (%)",
-            xticks=ranks, ylim=(0, 103))
+            xticks=ranks, ylim=(40, 80), yticks=np.arange(40, 81, 10))
     err.set(title="B  Clean-image reconstruction", xlabel="Projected coordinates",
             ylabel=r"Pixel MSE × $10^3$", xticks=ranks, ylim=(0, None))
     for ax in (acc, err):
+        ax.set_xlim(ranks[0]-2, ranks[-1]+2)
         ax.axvline(cfg["primary_rank"], color="#7E8C99", lw=.9, ls="--", zorder=0)
         ax.grid(axis="y")
         ax.legend(loc="upper center", bbox_to_anchor=(.5, -.25), ncol=2,
@@ -254,7 +266,7 @@ def diagnostics(rows, fits, cfg):
                      color=COLORS[method], alpha=.55, s=19, linewidths=0)
         cost.scatter(np.median(times), i, facecolors="white", s=45,
                      edgecolors=COLORS[method], marker=MARKERS[method])
-    cost.set(title="B  Single-thread fit cost", xlabel="Wall time (ms, log scale)",
+    cost.set(title="B  Single-thread fit cost", xlabel=r"Wall time (ms, $\log_{10}$ scale)",
              xscale="log", yticks=range(5), yticklabels=METHODS, ylim=(4.55, -.55))
     for ax in (rough, cost):
         ax.grid(axis="x")
