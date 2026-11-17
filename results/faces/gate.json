@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "dataset_rows_used": "240 fit-partition rows only",
+  "fit_images": 160,
+  "internal_check_images": 80,
+  "feature_shape": [
+    16,
+    16
+  ],
+  "fit_rank": 159,
+  "observed_fit_matrix_bytes": 327680,
+  "observed_grid_bytes": 524288,
+  "relative_spd_residual": 3.8519493415025516e-16,
+  "normalized_update_difference": 3.247841268011951e-16,
+  "grid_energy": 0.07677894570367474,
+  "fit": {
+    "Pixels": {
+      "dimension": 256,
+      "seconds": 0.000986300001386553,
+      "fit_only_check_accuracy": 0.7375
+    },
+    "PCA": {
+      "dimension": 24,
+      "seconds": 0.005028899991884828,
+      "fit_only_check_accuracy": 0.675
+    },
+    "LDA": {
+      "dimension": 24,
+      "seconds": 0.00533379998523742,
+      "fit_only_check_accuracy": 0.9375
+    },
+    "RSSPCA": {
+      "dimension": 24,
+      "seconds": 0.3911055999924429,
+      "fit_only_check_accuracy": 0.6875,
+      "tracked_peak_bytes": 2975088,
+      "deflation_residual": 3.184484616429522e-14,
+      "capped_components": 0,
+      "exact_repeated_weights": true
+    },
+    "No smoothness": {
+      "dimension": 24,
+      "seconds": 0.45471449999604374,
+      "fit_only_check_accuracy": 0.7
+    }
+  }
+}

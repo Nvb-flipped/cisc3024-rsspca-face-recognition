@@ -1,0 +1,26 @@
+{
+  "pdf": "report/report.pdf",
+  "sha256": "ed7960dd147fdb47c427f75d2f177ffd5301f59e97f908173608a9ce92961a6f",
+  "pages": 10,
+  "visually_inspected_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "required_headings": 6,
+  "figure_captions": 7,
+  "distinct_external_links": 10,
+  "relative_markdown_links": "checked with case-sensitive path components",
+  "compiler": "Tectonic 0.17.0+20260731 with BibTeX",
+  "remaining_diagnostics": [
+    "Fontconfig default configuration message",
+    "Underfull hbox near source-code placeholder page"
+  ]
+}

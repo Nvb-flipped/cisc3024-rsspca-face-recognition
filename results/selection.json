@@ -1,0 +1,95 @@
+{
+  "phase": "development_only",
+  "development_sha256": "e1b683cc211604fe8fd8c4417e6a69f31380e0c61d4af22e93cc21e9257ffedd",
+  "config": {
+    "fold_seed": 193,
+    "fold_corruption_seeds": [
+      6101,
+      6102,
+      6103
+    ],
+    "test_corruption_seeds": [
+      7301,
+      7302,
+      7303,
+      7304,
+      7305
+    ],
+    "fractions": [
+      0.0,
+      0.25,
+      0.5
+    ],
+    "image_shape": [
+      8,
+      8
+    ],
+    "patch_size": 4,
+    "neighbors": 3,
+    "ranks": [
+      4,
+      8,
+      16,
+      24
+    ],
+    "primary_rank": 8,
+    "eta": [
+      0.001,
+      0.01,
+      0.1
+    ],
+    "gamma": [
+      0.03,
+      0.3,
+      3.0
+    ],
+    "step_tolerance": 0.0001,
+    "max_iterations": 100,
+    "threads": 1
+  },
+  "code_sha256": {
+    "src/data.py": "97cb5a9d668e01a273d90d17dd0bd8452c570aaad6cfcb8343ce7c0e53961690",
+    "src/projectors.py": "29e61b36801ac6ff8872615ad4060398e92080ad471623149d65933374ed1782",
+    "src/experiment.py": "cd953448f0ef86153efc7a5508b9f164c3d881e054631d3fdf68e82c2ffd5baf"
+  },
+  "environment": {
+    "device": "CPU",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor_identifier": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+    "logical_processors": 16,
+    "python": "3.14.3",
+    "numpy": "2.4.4",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0",
+    "threadpools": [
+      {
+        "internal_api": "openblas",
+        "user_api": "blas",
+        "num_threads": 1,
+        "version": "0.3.31.188.0"
+      },
+      {
+        "internal_api": "openmp",
+        "user_api": "openmp",
+        "num_threads": 1,
+        "version": null
+      },
+      {
+        "internal_api": "openblas",
+        "user_api": "blas",
+        "num_threads": 1,
+        "version": "0.3.31.dev"
+      }
+    ]
+  },
+  "rss": {
+    "eta": 0.01,
+    "gamma": 0.03,
+    "mean_accuracy": 0.9482930950157841
+  },
+  "no_smoothness": {
+    "eta": 0.01,
+    "gamma": 0.0,
+    "mean_accuracy": 0.9478572967648596
+  }
+}

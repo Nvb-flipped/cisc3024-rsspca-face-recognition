@@ -1,0 +1,152 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[left=22mm,right=22mm,top=20mm,bottom=21mm]{geometry}
+\usepackage{amsmath,fontspec,unicode-math}
+\setmainfont{lmroman10-regular.otf}[
+  Path=../fonts/, BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf, BoldItalicFont=lmroman10-bolditalic.otf,
+  Ligatures=TeX]
+\setmonofont{lmmono10-regular.otf}[Path=../fonts/]
+\setmathfont{latinmodern-math.otf}[Path=../fonts/]
+\usepackage{booktabs,tabularx,array,graphicx,float,caption}
+\usepackage{xcolor,fancyhdr}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=navy,citecolor=navy,urlcolor=navy]{hyperref}
+\definecolor{navy}{HTML}{13334F}
+\definecolor{teal}{HTML}{00664F}
+\definecolor{muted}{HTML}{47586A}
+\definecolor{pale}{HTML}{EBF3F7}
+\definecolor{ruleline}{HTML}{C9D9E2}
+\hypersetup{pdftitle={Robust Sparse Smooth PCA for Handwritten Digit Recognition},pdfauthor={Paco, Sou Chak Tong}}
+\newcommand{\doi}[1]{doi: \href{https://doi.org/#1}{\nolinkurl{#1}}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\headheight}{14pt}
+\setlength{\fboxsep}{8pt}
+\setlength{\emergencystretch}{2em}
+\captionsetup{font=small,labelfont={bf,color=navy},justification=raggedright,singlelinecheck=false}
+\graphicspath{{../../results/figures/}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\color{muted}CISC3024 \enspace / \enspace AI Assignment \#3}
+\rhead{\small\color{muted}November 2026}
+\rfoot{\small\color{navy}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\reportfigure}[3]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=\linewidth]{#1}
+  \caption{#2}\label{#3}
+  \end{figure}}
+\newcommand{\sourcequote}[3]{%
+  \par\noindent{\small\texttt{#1}}\\
+  \noindent\textit{\textquotedblleft#2\textquotedblright}\\
+  \noindent #3\par}
+\newcommand{\E}{\mathcal{E}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\input{results_table.tex}
+\begin{document}
+
+{\bfseries\color{teal} CISC3024 --- Pattern Recognition \qquad AI Assignment \#3\par}
+\vspace{2mm}
+{\raggedright\bfseries\color{navy}
+{\fontsize{29}{33}\selectfont Robust Sparse Smooth PCA\par}
+{\fontsize{23}{28}\selectfont for Handwritten Digit Recognition\par}}
+\vspace{2mm}
+{\large Paco, Sou Chak Tong \enspace \textbf{U-C3-2652-3}}\par
+{\small November 2026 \quad \textcolor{muted}{Initial technical report}}\par
+\vspace{2mm}
+{\color{ruleline}\hrule}
+\vspace{3mm}
+\textbf{Abstract.}
+Robust sparse smooth PCA (RSSPCA) adds a pixel-grid penalty to an absolute-score criterion. This report adapts Wang et al.'s 2025 method to UCI Optdigits and evaluates it on 1,797 images from writers excluded from development. With eight coordinates and Euclidean 3-nearest neighbors, RSSPCA scored 94.77\% on clean training, 93.12\% at 25\% corrupted training and 90.76\% at 50\%. Its mean difference from PCA changed from $+0.17$ to $-0.37$ percentage points across the corrupted conditions. The grid penalty reduced loading roughness relative to the matched ablation. Fisher LDA led at eight coordinates.
+
+\section{How AI Found the Algorithm}
+The handout provided the six report topics and required AI assistance. \texttt{AGENTS.md} defined the persistent evidence and leakage rules. The separate stage file \texttt{01\_RESEARCH\_IMPLEMENT\_REPORT.md} specified the execution sequence and deliverables. Codex used the three sources to trace requirements and decisions.
+
+\sourcequote{AGENTS.md}{Do not consult the final test set during this gate.}
+{Codex downloaded only the development CSV. The independent arithmetic check and dataset smoke test ran before the selection record was written.}
+\sourcequote{01\_RESEARCH\_IMPLEMENT\_REPORT.md}{do not begin the full implementation until the mandatory algorithm-selection gate (Section B2) is passed.}
+{Codex screened primary papers, inspected the available reference solver and recorded a dated pass before creating the main pipeline.}
+\sourcequote{AGENTS.md}{Never select algorithms, hyperparameters, figure examples or conclusions by repeatedly consulting the final test set.}
+{The study fixed the example-selection rules and froze all fitted projections before obtaining the official test CSV. The second execution checked the same protocol and predictions.}
+
+\reportfigure{workflow}{Instruction-to-execution path observed in Prompt 01. The gate links the research decision to a runnable mathematical and dataset probe.}{fig:workflow}
+
+\clearpage
+\subsection{Search, screening and selection}
+Codex ran a targeted search on 17 November 2026. The discovery criteria were a 2024--2026 original peer-reviewed method, a substantive PCA or LDA contribution, direct vision relevance and enough detail for a controlled Python evaluation. The initial web searches and solver follow-up used these exact strings.
+
+{\small\setlength{\tabcolsep}{5pt}
+\begin{tabularx}{\linewidth}{@{}P{21mm}Y@{}}
+\toprule
+Purpose & Query string \\
+\midrule
+RSSPCA & \texttt{2025 robust sparse smooth principal component analysis RSSPCA face recognition} \\
+Sparse LDA & \texttt{2024 robust and sparse linear discriminant analysis face image objective robust sparse LDA} \\
+2D methods & \texttt{2025 2026 robust two dimensional principal component analysis face recognition algorithm sparse Lp} \\
+Broader search & \texttt{2024 2025 novel two dimensional PCA image recognition generalized weighted 2DPCA face recognition open access algorithm} \\
+LDA full text & \texttt{"Towards robust and sparse linear discriminant analysis for image classification" pdf RSLDA+ Liu Feng} \\
+Code & \texttt{DLR-2DPCA Pengfei Bi GitHub double layer robust code} \\
+\bottomrule
+\end{tabularx}}\par
+A literature lookup recovered the SCRAMBLE preprint. Codex used the journal article to verify the method and wear-scar image application. The complete query ledger is in \path{docs/research.md}. The literature-review skill guided primary-source screening. The computation-audit skill guided the independent calculation. The experimental-design and statistical-analysis skills informed the shared corruption masks and the interpretation of variation across runs \citep{kassis2026}.
+
+\begin{table}[H]\small
+\caption{Shortlist and internal suitability scores. Weights for recency, PCA/LDA centrality, implementation, experimental fairness, mathematical verification and figure potential were 15/20/20/20/15/10 percent. These are project decision weights.}
+\begin{tabularx}{\linewidth}{@{}P{26mm}YP{56mm}r@{}}
+\toprule
+Candidate & Contribution and vision use & Decision evidence & /5\\
+\midrule
+RSSPCA \citep{wang2025} & Absolute projected dispersion, sparse and grid-smooth loadings. Face recognition and reconstruction. & Open equations and MATLAB reference. Direct smoothing ablation at fixed feature count. & 5.00\\
+DLR-2DPCA \citep{bi2025} & Cut reconstruction loss and adaptive weights. Face, digit and traffic sign recognition. & Readable algorithm. More numerical boundary cases. Matrix outputs restrict matched budgets. & 4.30\\
+SCRAMBLE \citep{pfeiffer2025} & Robust cellwise reconstruction and elastic net. Wear-scar image regression. & Open R reference. More solver and scale choices for transfer to digit recognition. & 4.15\\
+RSLDA+ \citep{liu2024} & Sparse LDA with ADMM and thresholding. Image classification. & Complete solver unavailable through sources accessed during the search. & 2.95\\
+\bottomrule
+\end{tabularx}
+\end{table}
+\textbf{Decision gate.}
+Wang et al. published RSSPCA in PLOS One in May 2025. Its four-neighbor graph gives a concrete mechanism to test on raster data. At a fixed coordinate budget, the graph penalty can be switched off while keeping the absolute-score objective, sparsity setting and classifier. This made it possible to compare the effect of spatial regularization separately from the overall comparison with PCA and LDA.
+
+\clearpage
+\subsection{Why RSSPCA passed the gate}
+
+Recency and a direct change to PCA or LDA were necessary conditions. For the remaining candidates, the question was whether the published equations could support an independently checked implementation and a fair experiment. Table~\ref{tab:gate-scores} shows the individual ratings behind the shortlist.
+
+\begin{table}[H]\small\centering
+\caption{Recorded gate ratings from 1 to 5. A weighted score averages the six ratings with the indicated weights. Eligibility also requires an accessible solver.}
+\label{tab:gate-scores}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+Candidate & Recency & Centrality & Feasibility & Fairness & Math & Figures & Score\\
+Weight (\%) & 15 & 20 & 20 & 20 & 15 & 10 & \\
+\midrule
+RSSPCA & 5 & 5 & 5 & 5 & 5 & 5 & 5.00\\
+DLR-2DPCA & 5 & 5 & 3 & 4 & 5 & 4 & 4.30\\
+SCRAMBLE & 5 & 5 & 3 & 4 & 4 & 4 & 4.15\\
+RSLDA+ & 5 & 5 & 1 & 2 & 2 & 3 & 2.95\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+DLR-2DPCA was a viable alternative with a readable algorithm and direct digit-recognition precedent. On the $8\times8$ grid, a right projection with $r$ columns would deliver $8r$ scalar scores, which restricts the dimensions that can be matched to vector PCA and LDA. SCRAMBLE also had an accessible method and reference package. Its wear-scar application used regression, and transferring the method here would require choices about the cellwise loss, scale and sparsity fitting. RSLDA+ addressed image classification directly, but the accessible material lacked the complete iteration. The scores reflect those practical differences and carry no information about test accuracy.
+
+\subsection{What the development-only probe measured}
+
+The two-pixel calculation independently solved the defining linear system by Cramer's rule. The numerical residual was $6.28\times10^{-16}$ and the smallest eigenvalue of the symmetric system was $0.873$. A separate calculation with an exactly zero loading coordinate checked the branch most exposed to the inverse-diagonal formulation. The normalized update and its stopping interpretation are derived in Section~\ref{sec:method}.
+
+The data check read only the 3,823-row development file. It found 3,823 unique image vectors, ten classes with 376 to 389 examples each, and two constant coordinates. On the 3,058/765 feasibility split, PCA with eight coordinates and Euclidean 3-NN reached 96.08\%. A one-direction RSSPCA probe met the $10^{-4}$ step threshold in 27 iterations. These checks established that the representation, evaluator and update could run on the available CPU before the comparison study was designed. The 96.08\% value refers to that feasibility split.
+
+The dated record in \path{docs/algorithm_selection.md} locks the method and adaptations before the main implementation. The later study lock in \path{results/selection.json} records the dimension and selected penalties. Keeping the two records distinct lets a reviewer trace the decision to use RSSPCA and the subsequent selection of its parameters.
+
+\clearpage
+\input{algorithm}
+\clearpage
+\input{implementation}
+\clearpage
+\input{experiments}
+\clearpage
+\renewcommand{\bibsection}{\section*{References}}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

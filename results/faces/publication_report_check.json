@@ -1,0 +1,20 @@
+{
+  "pages": 19,
+  "repository": "https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition",
+  "section6_links": [
+    "https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition"
+  ],
+  "embedded_fonts": [
+    "LMMono10-Regular-Identity-H",
+    "LMRoman10-Bold",
+    "LMRoman10-Bold-Identity-H",
+    "LMRoman10-Italic-Identity-H",
+    "LMRoman10-Regular",
+    "LMRoman10-Regular-Identity-H",
+    "LatinModernMath-Regular",
+    "LatinModernMath-Regular-Identity-H"
+  ],
+  "sha256": "743c5a037421849120c1f46844b4e4ed6ca1572aae99338c801926ae5421e16b",
+  "reflection_matches_prior": true,
+  "unchanged_pages": 15
+}

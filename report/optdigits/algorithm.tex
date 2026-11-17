@@ -1,0 +1,73 @@
+\section{Algorithm Description}
+\label{sec:method}
+\subsection{Classical reference subspaces}
+
+Let $a_i\in\mathbb R^d$ be training image $i$, flattened in row-major order, with digit $y_i\in\{0,\dots,C-1\}$. There are $n$ training images, $d=64$ coordinates and $C=10$ classes. The training mean is $\mu=n^{-1}\sum_i a_i$. Let $X\in\mathbb R^{n\times d}$ have rows $x_i^\top=(a_i-\mu)^\top$.
+
+Classical PCA \citep{pearson1901} solves $\max_{\|w\|_2=1} w^\top S w$ for $S=X^\top X/(n-1)$. Differentiating with the norm constraint gives $Sw=\lambda w$. With thin SVD $X=U\Sigma V^\top$, the first $k$ eigenvectors are the first $k$ columns of $V$, with eigenvalues $\sigma_j^2/(n-1)$. The rank is at most $\min(d,n-1)$, and the experiment uses unwhitened scores.
+
+For Fisher LDA \citep{fisher1936}, let $\mu_c$ and $n_c$ be the class mean and size. The within- and between-class scatters are
+\[
+ S_W=\sum_{i=1}^{n}(a_i-\mu_{y_i})(a_i-\mu_{y_i})^\top,\qquad
+ S_B=\sum_{c=0}^{C-1}n_c(\mu_c-\mu)(\mu_c-\mu)^\top.
+\]
+When $S_W$ is positive definite, maximizing $w^\top S_B w$ under $w^\top S_Ww=1$ yields $S_Bw=\lambda S_Ww$. The weighted class means sum to zero after global centering, so $\operatorname{rank}(S_B)\le C-1=9$. The rank-aware SVD fit works in the nonzero within-class directions. This handles constant pixels without forming $S_W^{-1}$. Digit labels inform the LDA subspace. The downstream classifier is shared across all subspaces.
+
+\subsection{RSSPCA objective and the image graph}
+
+For extraction step $j$, let $R\in\mathbb R^{n\times d}$ be the residual training matrix, with $R=X$ initially. Wang et al.\ \citep{wang2025} define the loading objective
+\begin{equation}
+ \max_w \|Rw\|_1
+ \quad\text{subject to}\quad
+ \|w\|_2=1,\qquad \|w\|_1\le c_1,\qquad w^\top Lw\le c_2 ,
+ \label{eq:objective}
+\end{equation}
+where $c_1,c_2$ are sparsity and roughness bounds. Absolute projected scores grow linearly with projection magnitude, compared with quadratic growth in PCA. This follows the earlier PCA-$\ell_1$ criterion \citep{kwak2008}. For example, doubling one residual row at fixed $w$ doubles its absolute-score contribution and quadruples its squared-score contribution. A large residual may still affect the direction because the sign vote multiplies the residual row.
+
+Build $A$ by joining horizontal and vertical neighbors and use $L=\operatorname{diag}(A\mathbf1)-A$. In an $8\times8$ grid, there are 112 undirected edges and no wrap around at a row boundary. For edge set $\E$,
+\begin{equation}
+ w^\top Lw=\tfrac{1}{2}\sum_{p,q}A_{pq}(w_p-w_q)^2
+           =\sum_{\{p,q\}\in\E}(w_p-w_q)^2 .
+ \label{eq:energy}
+\end{equation}
+Thus $L$ is symmetric positive semidefinite and annihilates constant vectors. Penalizing this energy favors nearby pixel weights that agree. The $\ell_1$ penalty on unit vectors favors concentration on fewer pixels. These effects can compete near sharp stroke boundaries.
+
+\reportfigure{solver}{One extraction step and the shared nearest-neighbor evaluator. The grid Laplacian acts on loading coordinates. Deflation uses training residuals, whereas digit predictions use scores from the centered, original input.}{fig:solver}
+
+\clearpage
+\subsection{From the minorizer to the published update}
+
+For a current unit direction $w$ with nonzero coordinates, set $D=\operatorname{diag}(|w|)$ and $v=R^\top\operatorname{sign}(Rw)\in\mathbb R^d$, using $\operatorname{sign}(0)=0$. For any trial $z\in\mathbb R^d$,
+\[
+ \|Rz\|_1\ge v^\top z,\qquad
+ |z_p|\le\frac{z_p^2}{2|w_p|}+\frac{|w_p|}{2}.
+\]
+Both inequalities are tight at $z=w$. The first follows termwise from $|b|\ge s b$ for $|s|\le1$. The second follows by expanding $(|z_p|-|w_p|)^2\ge0$.
+
+Write the Lagrangian with penalty multipliers $a,b\ge0$ on the last two constraints in Eq.~\eqref{eq:objective} and $c>0$ on $\|z\|_2^2-1$. Replacing the two absolute-value terms with their bounds gives the concave quadratic minorizer, up to an additive constant,
+\[
+ G(z\mid w) = v^\top z -\tfrac a2 z^\top D^{-1}z -b z^\top Lz-c z^\top z.
+\]
+Its unconstrained stationary point solves $(2cI+aD^{-1}+2bL)z=v$. The published update normalizes the direction, absorbing the positive scale $2c$ by defining $\eta=a/(2c)$ and $\gamma=b/c$. The pre-normalization vector $p$ solves
+\begin{equation}
+ (I+\eta D^{-1}+\gamma L)p=v,\qquad
+ w^+=p/\|p\|_2 .
+ \label{eq:original}
+\end{equation}
+For invertible $D$, putting $p=Du$ gives the published zero-safe form $p=D(D+\eta I+\gamma LD)^{-1}v$. Our implementation uses $H=D^{1/2}$ and the equivalent symmetric system
+\begin{equation}
+ M t=Hv,\quad M=D+\eta I+\gamma H L H,\qquad
+ p=Ht .
+ \label{eq:spd}
+\end{equation}
+The identity $H(D+\eta I+\gamma LD)=MH$ ensures equivalent outputs even with zero entries in $D$ when $\eta>0$. The nonsymmetric system is invertible because it is similar to the positive-definite block on the nonzero coordinates and has diagonal $\eta I$ in its remaining block. Also $M\succeq\eta I$. The grid has maximum degree four, so $\|L\|_2\le8$. With unit $w$, \(\kappa_2(M)\le(\eta+1+8\gamma)/\eta\). For the selected penalties this bound is 125. The implementation solves the system using a Cholesky-based routine.
+
+\subsection{Worked example and stopping interpretation}
+
+Take rows $(1,2)$ and $(-1,-2)$, $w=(0.6,0.8)^\top$, and a two-pixel edge with $L=\left[\begin{smallmatrix}1&-1\\-1&1\end{smallmatrix}\right]$. Then $v=(2,4)^\top$. For $\eta=0.2$ and $\gamma=0.5$, the nonsymmetric system for $u$ has rows $(1.1,-0.4)$ and $(-0.3,1.4)$. Cramer's rule followed by $p=Du$ gives
+\[
+ p=(132/71,\,200/71)^\top,\qquad w^+=(0.550842,\,0.834609)^\top.
+\]
+The SPD computation agreed. Starting with $(1,0)^\top$ gave $p=(20/17,0)^\top$, illustrating that exact zero coordinates are absorbing for $\eta>0$.
+
+The method maximizes the unconstrained quadratic before normalization. A sphere-constrained quadratic optimizer would also satisfy tangent stationarity. The numerical example gives $\|(I-w^+{w^+}^\top)(v-Qw^+)\|_2=0.376$ for $Q=I+\eta D^{-1}+\gamma L$, so the normalized candidate fails that stationarity condition. We use the published map as a fixed-point iteration. A small direction change serves as its operational stop. Exact constraint-budget satisfaction, monotonic ascent of the absolute-score objective and global optimality remain unverified.

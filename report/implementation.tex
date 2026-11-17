@@ -1,0 +1,66 @@
+\section{How AI Implemented the Algorithm}
+
+Codex inspected the authors' GPL-3.0 MATLAB reference \citep{matlab} and implemented the paper equations independently with NumPy and SciPy. The reference initializes with axes from the original SVD, stops using a relative change in the L2 score norm and uses accumulated raw directions in deflation. This project initializes each component with the leading covariance eigenvector of the \emph{current residual}. It uses the sign-invariant step size $\min(\|w^+-w\|_2,\|w^++w\|_2)$ and stops at $10^{-4}$ or 100 updates. The code records both step size and mean absolute score. The largest-magnitude entry is made nonnegative for display. With equal leading eigenvalues, the initialization can depend on the numerical basis picked by the solver.
+
+\subsection{Deflation, coordinate scores and cost}
+
+Write $W_j=[w_1,\ldots,w_j]$ and let $Q_j$ have orthonormal columns spanning $W_j$, maintained by twice removing the existing basis projection from each new column before normalizing. We recompute \(R_j=X-(XQ_j)Q_j^\top\). Then $R_j W_j=0$ up to roundoff. The expression $I-W_jW_j^\top$ is an orthogonal projector only when the columns of $W_j$ are orthonormal. The raw columns can remain oblique, so prediction uses $W_k^\top(a-\mu)$ and retains the learned metric on those coordinates. The implementation rejects excess dimensions, exhausted residuals, dependent new directions and an update with zero norm.
+
+For two images $a$ and $b$, squared Euclidean distance between the raw scores is
+\[
+ \|W_k^\top(a-b)\|_2^2=(a-b)^\top W_kW_k^\top(a-b).
+\]
+The common mean cancels in this calculation. Flipping the sign of a loading leaves this distance unchanged. Using the orthonormal basis $Q_k$ for classification would instead assign equal weight to all directions in the learned span and could change which neighbors vote. The two bases therefore have distinct roles in the implementation.
+
+For $k$ components and up to $T$ updates per component, the dense implementation costs $O\!\left(k(nd^2+d^3)+kT(nd+d^3)+ndk^2\right)$ time. The terms bound residual covariance/eigenvector initialization, sign votes and SPD solves, and growing orthogonal projections. Working storage is $O(nd+d^2+dk)$ plus diagnostic traces. A test score costs $O(dk)$ per image and brute-force 3-NN compares $k$-coordinate scores against $n$ training examples. The primary face pipeline uses $256\times256$ systems, measured in the training-only gate.
+
+\begin{table}[H]\small
+\caption{Pseudocode and equation-to-code mapping. Fit inputs are training rows, labels, penalties and the feature budget. Each returned face loading has 256 entries.}
+\begin{tabularx}{\linewidth}{@{}P{9mm}YP{53mm}@{}}
+\toprule
+Step & Operation & Implementation \\
+\midrule
+1 & Compute $\mu$, center training rows, set $R\gets X$, and form $L$. & \texttt{fit\_rsspca}, \texttt{grid\_laplacian} \\
+2 & For each component, initialize $w$ from the leading residual covariance eigenvector. & \texttt{fit\_rsspca} \\
+3 & Form $v,D,H,M$, solve Eq.~\eqref{eq:spd}, normalize, and repeat to the step threshold or cap. & \texttt{fixed\_point}, \texttt{iterate\_component} \\
+4 & Append $w$ to $W$ and reproject $X$ away from its span. & \texttt{fit\_rsspca} \\
+5 & Project train and test with the saved $\mu,W_k$. Vote among the 3 closest training scores. & \texttt{Projection.transform}, \texttt{classifier} \\
+6 & For reconstruction, compute a thin QR basis for the span of $W_k$ and project the clean input. & \texttt{reconstruct} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\subsection{Reconstruction in a nonorthogonal loading span}
+
+For a face column vector $a$, write $W_k=Q_kB_k$ using thin QR. With linearly independent columns in $W_k$, $B_k$ is invertible, so $Q_k$ and $W_k$ span the same subspace. Minimizing $\|(a-\mu)-Q_k z\|_2^2$ gives $z=Q_k^\top(a-\mu)$ by the normal equations. Thus
+\[
+\widehat a=\mu+Q_kQ_k^\top(a-\mu),\qquad
+\mathrm{MSE}(a,\widehat a)=d^{-1}\|a-\widehat a\|_2^2 .
+\]
+The residual is orthogonal to the span. The projector $Q_kQ_k^\top$ is symmetric and idempotent. A small test with deliberately nonorthogonal columns checked reconstruction against an independent least-squares solve and verified that a second projection leaves the reconstruction unchanged. The test target is the same clean reduced image supplied to the projection. Noise acts only on the training rows used to learn $\mu$ and $W_k$.
+
+\subsection{Verification and execution}
+
+The combined suite passed 13 tests. It includes the ten Prompt 01 regression checks and three face additions for deterministic identity splits, rectangular box averaging and the nonorthogonal reconstruction check. The training-only face probe independently tested the larger grid and all recognition arms.
+
+\begin{table}[H]\small
+\caption{Representative verification checks from \texttt{tests/test\_pipeline.py}. Numerical tolerances are absolute floors used by the assertions.}
+\label{tab:checks}
+\begin{tabularx}{\linewidth}{@{}P{33mm}Y@{}}
+\toprule
+Check & Evidence and the failure it can expose\\
+\midrule
+Graph geometry & A $2\times3$ grid has seven unique edges, zero row sums, a nonnegative spectrum up to roundoff and no edge spanning a row boundary. A hand-summed edge energy checks the flattening convention.\\
+Update equivalence & The SPD solve is compared with an independent nonsymmetric solve at three penalty pairs, including $\eta=10^{-9}$ with $\gamma=0$ and $\eta=10^{-8}$ with $\gamma=100$. The test uses a $10^{-10}$ absolute tolerance floor after aligning signs and verifies that exact zero coordinates remain zero.\\
+Deflation and prefix & Tests compare repeated loading fits and the first loading extracted on its own. An independently computed basis gives a residual orthogonal to the learned span within $10^{-13}$. A rank-deficient input must raise.\\
+Classical baselines & PCA is checked against the scikit-learn subspace and the covariance eigen-equation. The Fisher SVD subspace is checked against a generalized eigenproblem and adding a constant pixel must preserve its scores up to sign.\\
+Data and selection & The two corruption severities share row IDs, patch locations and values on their intersection. A serialization round trip checks mask replay. A tie in mean accuracy exercises the stated selection order.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Replay and metric checks.}
+The face run used Windows 11, Python 3.14.3, NumPy 2.4.4, SciPy 1.18.0 and scikit-learn 1.9.0 on CPU, with BLAS and OpenMP limited to one thread. A new replay matched the original settings, split, loadings, final masks, 143 prediction arrays and 99 reconstruction-error arrays exactly. Fit times are measured wall times and can vary.
+
+The Prompt 02 audit independently decoded the source images, regenerated both mask streams and computed Euclidean distances and class votes directly. It reproduced all 11,440 classifications and used least squares to verify the per-image reconstruction errors. Across all fits, the normalized PCA eigen-equation residual stayed below $2.5\times10^{-15}$, and the retained LDA scores satisfied the within-class whitening check. The executable checks and diagnostic record are in \path{scripts/review_face.py} and \path{results/faces/prompt02_audit.json}.

@@ -1,0 +1,177 @@
+\section{Experiment Settings and Results}
+\subsection{Faces, split and training corruption}
+
+The primary dataset is the $64\times64$ Olivetti derivative of the AT\&T Laboratories Cambridge database \citep{attcam,sklearnfaces}. It has ten grayscale images for each of 40 identities. Acquisition varies in expression, lighting and details such as glasses. The released images are cropped frontal views against a largely uniform background. This experiment evaluates closed-set recognition, so fitting, validation and test all contain every identity. Its question is whether a new image of a known person can be matched to that identity. The experiment does not evaluate unseen identities.
+
+The input orientation follows the scikit-learn loader. Each source byte is divided by 255, and nonoverlapping $4\times4$ source blocks are averaged to produce one $16\times16$ image. This is a fixed box filter followed by integer downsampling. It attenuates high frequencies before decimation and does not use any face-test statistics. All arms use the same reduced pixels and the mean fitted on their own training rows.
+
+\reportfigure{face_protocol}{The first four archived perturbations in the seed-8301 severe mask applied to the final fitting pool. Pixel positions are zero indexed on the $16\times16$ grid. Colors distinguish untouched cells and cells assigned either zero or one. A replacement can equal the original value.}{fig:protocol}
+
+With split seed 20261117, six images per identity go to fitting, two to validation and two to test. The 240/80/80 source rows are disjoint and the final audit found 400 distinct reduced images. Tuning used clean validation images and 240 fitting examples. Final fits used the union of fitting and validation rows, eight images per identity. The clean test denominator is 80 throughout.
+
+A mask selects $\lfloor fn\rfloor$ training rows without replacement for $f\in\{0,.25,.50\}$. Each selected $16\times16$ face receives an $8\times8$ patch whose location is drawn uniformly among 81 positions. Within it, each value is independently set to zero or one with equal probability. With 320 final training rows, 80 or 160 images receive patches. The lower severity is a prefix of the higher severity mask within each seed. All arms share the row identities, patch values, locations and clean test images.
+
+\clearpage
+\subsection{Matched comparison, tuning and outcome definitions}
+
+The four reduced arms use 8, 16 and 24 coordinates, with 16 the primary budget. Unprojected pixels use all 256 input coordinates. All models share the same training rows, masks and uniform Euclidean 3-NN. Fisher LDA uses identity labels and its fitted within-class scaling. The PCA-family arms fit without labels. All arms use labels at the voting stage and retain their fitted coordinate scales. A three-way class-vote tie goes to the smallest encoded identity. The review found no tied distances at the third-neighbor boundary in the saved evaluations.
+
+The development grid uses three sparsity settings $\eta$ and two graph settings $\gamma$. A candidate uses one shared training mask stream per severity, seed 8101. The selected pair maximizes the mean of the three accuracies at 16 coordinates, with ties resolved by smaller $\gamma$ then smaller $\eta$. In Table~\ref{tab:faceval}, the two leading settings each classify 171 of the 240 repeated validation predictions correctly. The rule selected $(0.001,0.3)$. The controlled ablation uses $\eta=0.001$ and $\gamma=0$.
+
+\begin{table}[H]\small\centering
+\caption{Accuracy (\%) on the 80 development validation rows. The three columns vary only the training corruption.}
+\label{tab:faceval}
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+$\eta$ & $\gamma$ & Clean & 25\% & 50\% & Mean \\
+\midrule
+\facevalrows
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $\gamma=0$ the system in Eq.~\eqref{eq:spd} is diagonal, with $p_i=|w_i|v_i/(|w_i|+\eta)$. This makes the attenuation of small coefficients explicit. Positive $\gamma$ adds a degree-dependent diagonal penalty and couples neighboring entries through $-\gamma\sqrt{|w_iw_j|}$. Removing the graph term at fixed $\eta$ isolates its contribution under the chosen settings. The separate effects of the $\ell_1$ score and sparsity term are outside this ablation.
+
+Let $C_{ij}$ be the test confusion count for true identity $i$ and predicted identity $j$. Accuracy is $\sum_i C_{ii}/80$. Balanced accuracy averages $C_{ii}/\sum_j C_{ij}$ over the 40 identities and equals accuracy here because every identity has exactly two views. Macro-F1 averages $2C_{ii}/(\sum_j C_{ij}+\sum_j C_{ji})$. The latter also reflects whether a classifier overpredicts a label. In the secondary reconstruction analysis, we average pixel MSE across the same 80 clean views for each PCA-family fit.
+
+The five final training masks use seeds 8301--8305 at each positive severity. Clean training is deterministic and runs once. Before test scoring, the face runner saved and hashed the selected configuration, split, fit records and matrices, as well as recording source code and data digests. The test phase checks that freeze and reconstructs the training exemplars from the archived mask arrays. In the recorded run, the freeze completed at 14:59:22 UTC+8 on 17 November 2026 and final scores were written at 14:59:40.
+
+\clearpage
+\subsection{Held-out identification}
+
+\begin{table}[H]\small\centering
+\caption{Locked study holdout accuracy (\%). Positive-severity entries are mean $\pm$ sample SD over five training masks. Macro-F1 is averaged at 50\% corruption.}
+\label{tab:facemet}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Method & Coordinates & Clean & 25\% & 50\% & Macro-F1 at 50\%\\
+\midrule
+\facemetrows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\reportfigure{face_recognition}{Identification on the same 80 clean test faces. A, clean accuracy and the means (lines) and individual masks (small points) at positive severities. Raw pixels use 256 coordinates and other arms use 16. B, paired accuracy differences in percentage points for five masks per severity. Open symbols mark mean differences. Positive values favor RSSPCA.}{fig:recognition}
+
+The three PCA-family arms each classified 66 of 80 clean views correctly. At 25\% corruption, RSSPCA improved over PCA by 2.00 percentage points on average (paired range $-3.75$ to $+6.25$). At 50\% the difference was $+2.75$ points (range $-7.50$ to $+10.00$). In the severe condition it beat PCA on three masks, tied on one and lost on one. This supports an average advantage under these masks while showing that the sign of the effect is sensitive to the corruption realization.
+
+Adding smoothing at fixed $\eta$ gave $+2.25$ points at 25\% and $+1.75$ at 50\%. The respective paired ranges were $-1.25$ to $+5.00$ and $-5.00$ to $+6.25$. At 50\%, Fisher LDA led RSSPCA by 10.00 points on average. Raw pixels also scored higher than RSSPCA but preserved sixteen times as many coordinates. The supervised direction criterion and larger raw representation change what information is retained, even though the neighbors and training masks are held fixed.
+
+One additional correct face changes accuracy by 1.25 percentage points. The agreement of conclusions across masks is more informative here than a single comparison. The sample SD describes mask sensitivity on these fixed images; it gives no interval for an independent sample of people or test views.
+
+\clearpage
+\subsection{Spatial loadings and the smoothing ablation}
+
+\reportfigure{face_loadings}{First four unit loading maps in each method's extraction order, from the 50\% training mask at seed 8301. Loadings shown in the same column are not matched across methods. The largest absolute coefficient is oriented nonnegative. All maps share a zero-centered weight scale. Row annotations average grid energy over the first 16 directions.}{fig:faceload}
+
+At 50\%, RSSPCA averaged grid energy 1.226 versus 2.440 without smoothing. For unit directions this is the sum of squared coefficient differences on the 480 edges. It dropped about 50\% when the graph term was enabled. The fraction of coefficients with absolute value at most $10^{-3}$ fell from 2.67\% to 1.97\%, averaging over the five masks at 16 coordinates. The chosen threshold counts small weights, so it describes coefficient magnitudes rather than exact support recovery. These changes are consistent with smoothing spreading weight across adjacent pixels. The paired recognition contrasts in Figure~\ref{fig:recognition} measure the smaller change in identification.
+
+The first loading of each arm shows a broad region with a common sign. Later loadings have more localized sign changes. At an edge in a map, the penalty increases with the squared difference between neighboring weights, even if both weights are small. The single-seed maps illustrate where such differences occur. The distribution of edge energies across all five severe masks in Figure~\ref{fig:facediag} tests whether the reduction holds beyond that illustration.
+
+\clearpage
+\subsection{Fitting cost and stopping behavior}
+\label{sec:face-diagnostics}
+
+\reportfigure{face_diagnostics}{Diagnostics at 50\% corrupted training. A, mean edge energy at 16 coordinates for each of five masks. Outlined markers give means. B, measured fit time on a logarithmic axis with median markers. Pixels use 256 coordinates, other arms 16. C, empirical cumulative percentage of loadings stopped after each number of updates. Each robust arm contributes 24 loadings from each of five fits. The step threshold is $10^{-4}$ and the cap of 100 is beyond the plotted range.}{fig:facediag}
+
+Both robust arms used the direction-change stop for all 264 extracted directions across the complete study. In the severe fits the median was 10.5 updates for RSSPCA and 10 for the no-smoothing arm. The review independently took one more update from each saved direction. For RSSPCA, one subsequent step slightly exceeded $10^{-4}$, with a maximum of $1.0235\times10^{-4}$. Also, 245 of its 264 traces contained an absolute-score decrease of more than $10^{-12}$ between successive iterates. The logged score excludes the penalties. These diagnostics quantify finite-step termination and leave objective convergence and global optimality unresolved.
+
+Median fit time at 16 coordinates was 153.0 ms for RSSPCA, 142.3 ms without smoothing, 9.2 ms for PCA and 11.7 ms for LDA. Timing includes projection fitting and preparing the 3-NN training scores. The PCA and LDA decompositions were performed once per mask and charged at each prefix, while the robust arms were charged their cumulative extraction time through each prefix. Timings characterize this implementation and CPU. Prediction medians were 0.35--0.38 ms for the 80-view batch across those four arms.
+
+\clearpage
+\subsection{Feature budget and reconstruction fidelity}
+
+\reportfigure{face_budget}{Sensitivity to coordinate budget at 50\% corrupted training. The dashed guide marks the primary budget of 16. Points and whiskers give means and sample SDs over five masks on the same 80 clean test views. A, identification. B, mean per-pixel reconstruction MSE multiplied by $10^3$, measured before clipping.}{fig:facebudget}
+
+At 50\%, increasing the RSSPCA budget from 8 to 16 to 24 raised accuracy from 57.00\% to 58.25\% to 59.75\%. LDA improved from 59.75\% to 68.25\% to 70.75\%. The comparison at 24 coordinates is a prespecified sensitivity result. The primary budget remains 16. Increasing the budget lets additional variation reach the classifier, and the different gains show that useful identity information is distributed differently across the fitted directions.
+
+\begin{table}[H]\small\centering
+\caption{Mean clean-image projection MSE $\times10^3$ at 16 coordinates. Image scale is $[0,1]$, and errors are measured before clipping. Each nonzero severity averages five fits on the same 80 test images.}
+\label{tab:facemse}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Method & Clean training & 25\% & 50\%\\
+\midrule
+\facemsrows
+\bottomrule
+\end{tabular}
+\end{table}
+
+With clean training, PCA reconstructed best at 16 coordinates (2.661 versus 2.845 for RSSPCA on the scaled MSE). At 50\%, RSSPCA's MSE was 4.162, 24.5\% below PCA and 18.5\% below its no-smoothing arm. Both stronger training corruption and higher dimensional budgets have visible effects on representation fidelity. The held-out input is already clean. These numbers measure whether the subspace fitted under corruption can represent clean faces.
+
+For a fixed fit, the first $k$ columns are prefixes of the same loading matrix. Increasing $k$ enlarges the projection span, so least-squares reconstruction error can only decrease in exact arithmetic. Identification accuracy has no such monotonic guarantee because adding a score changes neighbor distances and votes.
+
+\clearpage
+\subsection{Errors, examples and external validity}
+
+\reportfigure{face_reconstruction}{Per-image reconstruction MSE multiplied by $10^3$ for the three PCA-family arms at 16 coordinates, measured before clipping. Fits use 50\% corrupted training with seed 8301. Each example is the smallest held-out source index for one of the five identities fixed before scoring. Each marker is one error on one clean input. Table~\ref{tab:facemse} summarizes all 80 held-out views.}{fig:facerecon}
+
+At seed 8301 with 50\% training corruption, RSSPCA identified 50 of 80 faces correctly. The two held-out views of identity 12 were assigned to 3, both views of 22 to 8, and both views of 38 to 28. Across five severe masks, seven identities had both test views correct in every fit, while one identity had neither view correct in any fit. Each identity contributes only two distinct images, so these outcomes describe the observed split. They do not isolate which visual feature drove a particular error.
+
+\textbf{Limitations.} The cropped, frontal data and $16\times16$ reduction restrict the range of acquisition conditions. The shared patch treatment changes the fitted directions and the neighbor exemplars together. The experiment cannot attribute a recognition error to just one pathway. Among 880 primary-budget RSSPCA classifications, 220 used the fixed class-vote tie rule. Those counts include repeated predictions of the same 80 images. Higher-resolution scaling, occluded test views and sensitivity to other tie rules remain unmeasured.
+
+\clearpage
+\subsection{Relation to the published experiment and digit study}
+
+Wang et al.\ \citep[Secs.~4.1--4.2]{wang2025} resize ORL faces to $56\times46$. Their identification study uses 7/3 images per identity, training-derived feature z-scores, 30 directions and nearest-neighbor classification across three repetitions. Our $16\times16$ Olivetti setup uses a fixed 6/2/2 split, a final 8/2 refit, and mean-centered inputs with primary budget 16 and shared 3-NN. For reconstruction, the source fits all 400 ORL images after perturbing 80 and measures errors on the 320 uncorrupted images in that pool. Our errors use held-out inputs and targets. These protocol differences make the present results an adaptation with a separate interpretation.
+
+\begin{table}[H]\small\centering
+\caption{Secondary transfer evidence from Prompt 01. Optdigits accuracy (\%) at eight coordinates, with a writer-disjoint holdout of 1,797 images. These metrics use a different dataset and protocol.}
+\label{tab:digitsecondary}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Method & Clean & 25\% & 50\%\\
+\midrule
+PCA & 94.55 & 92.95 & 91.13\\
+Fisher LDA & 95.05 & 93.98 & 91.89\\
+No smoothness & 94.60 & 92.92 & 91.09\\
+RSSPCA & 94.77 & 93.12 & 90.76\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+That experiment predates the face request. It tuned on the official UCI Optdigits development set \citep{uci1998} and tested different writers, whereas the face test uses different images of known identities. Its advantage over PCA at 25\% and deficit at 50\% show that a favorable face result cannot be transferred to another dataset by assumption. The original digits protocol, all 165 prediction arrays and their verification are preserved beside the archived digit report.
+
+\subsection*{Conclusion}
+The 2025 RSSPCA method was numerically feasible on $16\times16$ faces. Under severe training corruption its graph term reduced loading roughness, and its fitted span represented clean test faces more accurately than the matched PCA-family controls. Recognition gains were smaller, varied across masks, and remained below Fisher LDA. The face and digit results jointly show why structural effects, reconstruction and class decisions should be measured separately.
+
+\clearpage
+\section{What I Have Learnt from This AI Assignment}
+
+Compared with my previous AI assignments, I found that this assignment was not just about getting Codex to produce a working project. I also had to think more carefully about whether the project itself was a good choice. At first, I wondered whether choosing a newer and more complicated algorithm would make the assignment better. However, after looking into different PCA/LDA methods, I realized that difficulty and publication date are not everything. An algorithm might look impressive on paper, but if it is too difficult to implement properly or does not allow meaningful experiments, it might not be a suitable choice. I learned that choosing a research topic involves finding a balance between technical difficulty, relevance, feasibility, and what can actually be demonstrated.
+
+One decision I spent quite some time thinking about was the dataset. Initially, Codex implemented Robust Sparse Smooth PCA (RSSPCA) for handwritten-digit recognition. The implementation worked, and the topic met the assignment requirements. However, I noticed that it was quite similar to my previous assignment, which also used handwritten digits. Even though the algorithms were completely different, I felt that using a similar dataset and producing similar types of graphs would make the two projects look repetitive. I considered whether I should start everything again with a different topic. Eventually, I decided to keep RSSPCA and change the main application to face recognition, which was also closer to the original research paper. This experience taught me that the first project design is not necessarily the best one, and sometimes changing direction does not mean throwing away all the work already done.
+
+I also gained a better understanding of PCA and LDA beyond what I had learned in class. Previously, I mainly understood PCA as a way of reducing the number of features while retaining as much information as possible. Through this assignment, I learned how RSSPCA modifies the traditional approach by considering robustness, sparsity, and spatial smoothness. I also realized that understanding the mathematical idea is only part of the challenge. Actually implementing the algorithm involves many details, such as numerical stability, iterative optimization, stopping conditions, and computational cost. This became more obvious when moving from small digit images to face images, where the number of features could be much larger. It made me appreciate why checking whether an algorithm is practical should come before running a large experiment.
+
+Another thing I found interesting was that a more advanced algorithm does not always give better results. In the initial digit experiments, RSSPCA produced smoother feature patterns, but its recognition accuracy was not consistently better than ordinary PCA or LDA. At first, I expected the newer method to perform better, but the results showed that this is not necessarily the case. I learned that an experiment should not be judged only by whether the proposed method wins. Understanding why different methods behave differently, what trade-offs they introduce, and under what conditions they work well is just as important. I also paid more attention to the graphs in this assignment. Instead of simply making them look professional, I wanted each figure to explain something useful about the algorithm or the experimental results.
+
+Finally, this assignment helped me improve how I work with AI coding agents. From my previous assignments, I had already learned the importance of \texttt{AGENTS.md}, detailed prompts, and specialized skills. This time, I realized that even with well-written instructions, I should not simply accept every decision Codex makes. I still need to question whether its choices make sense, whether the experiments are fair, and whether the report actually demonstrates what the assignment asks for. Looking back, I think the biggest lesson for me was that using AI effectively is not just about telling it what to do. It is also about knowing when to question its decisions, when to improve the plan, and how to judge whether the final work is convincing.
+
+\clearpage
+\section{Webpage Link of the Source Codes}
+\noindent\colorbox{pale}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+\textbf{Public source repository}\par
+\url{https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition}}}\par
+
+\begin{table}[H]\small
+\caption{Evidence available to a reviewer. Paths start at the project root.}
+\begin{tabularx}{\linewidth}{@{}P{56mm}Y@{}}
+\toprule
+Path & Evidence\\
+\midrule
+\path{docs/face_pivot_decision.md}, \path{docs/face_study_design.md} &
+Human request, source attribution, training-only gate, frozen study decisions and dated execution record.\\
+\path{configs/faces.json}, \path{src/face_study.py} &
+Fixed split, mask and tuning settings with distinct prepare and held-out phases.\\
+\path{results/faces/} &
+Split and selection, frozen weights and masks, predictions, reconstruction errors, summaries and replay audit.\\
+\path{report/optdigits/}, \path{configs/study.json} &
+Archived digit PDFs and source, original settings, and links to the unchanged digit evidence.\\
+\path{src/face_summary.py}, \path{src/face_figures.py} &
+Recreate the face tables and vector figures from the archived records.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The face replay uses \texttt{python -m src.face\_study} with stages \texttt{fetch}, \texttt{tune}, \texttt{prepare}, \texttt{final} and \texttt{audit}. It can compare a fresh output directory to the saved face results. The raw Olivetti archive is obtained separately and checked by SHA-256. The public figures report measured errors, generated masks and learned coefficients. The README gives the commands to reproduce the study and regenerate the local illustration galleries from the attributed source.

@@ -1,0 +1,152 @@
+\section{Experiment Settings and Results}
+\subsection{Data, corruption and comparators}
+
+Optdigits \citep{uci1998} counts on-pixels in $4\times4$ cells of normalized $32\times32$ digit images, giving a row-major $8\times8$ count grid. Counts were divided by 16 and the training mean was fitted anew under each corruption condition. All 64 coordinates were kept to preserve the grid. The official development file has 3,823 images from 30 writers. The official test file has 1,797 images from 13 other writers. All image vectors were unique within each file and none exactly matched across files. The source is licensed CC BY 4.0.
+
+\reportfigure{dataset}{Development data and one synthetic training patch. A, first official development row of each class, rendered from block counts. B, counts by digit in the development file. C, the first corrupted row in the prespecified seed-7301 mask before and after replacement. The outline marks the affected $4\times4$ cells.}{fig:dataset}
+
+At fractions 0.25 and 0.50, the study sampled $\lfloor fn\rfloor$ training rows without replacement. One $4\times4$ block per selected image was drawn uniformly from 25 valid positions. Each entry in that block was independently replaced by black or white at equal probability. The treatment targets one quarter of the selected image's grid, or about 6.25\% and 12.5\% of all training cells at the two fractions. A cell can retain its original value if it already matches the replacement. A seed determines both row order and patch assignments. The 25\% training mask is a prefix of the 50\% mask for that seed, and every method sees the same masks and labels.
+
+Final refits used 955 or 1,911 corrupted training rows and seeds 7301--7305. Clean training ran once. Validation and test images stayed clean. The treatment affects both the estimated projection and the training exemplars available to the nearest-neighbor classifier. The raw-pixel comparator has no fitted projection criterion, so any change in its accuracy under this protocol comes from the modified exemplars.
+
+Three shuffled stratified development folds with seed 193 were used for tuning. Fold corruption seeds were 6101--6103. Each fold fitted on 2,548 or 2,549 images and validated on the remaining 1,275 or 1,274 images. The data do not include per-row writer IDs, so the internal folds may share writers. The official test split retains the source's writer boundary.
+
+\textbf{Comparison budget.} The fixed Euclidean 3-NN evaluator used uniform voting and the same training row order. All reduced methods used four and eight coordinates. PCA and the robust arms also used 16 and 24. Eight was the primary budget because it compresses the 64-input representation eightfold and remains below LDA's nine-direction rank ceiling. The 64-coordinate raw-pixel reference keeps the original feature budget. PCA, RSSPCA and the no-smoothing ablation fit directions without labels. LDA uses the training labels to choose a subspace, and all methods use those labels in the final voting stage.
+
+\clearpage
+\subsection{Development selection and metric definitions}
+
+The tuning grid combined $\eta\in\{0.001,0.01,0.1\}$ with $\gamma\in\{0.03,0.3,3\}$. The no-smoothing check repeated the same three sparsity coefficients with $\gamma=0$. For each pair, the objective was mean eight-coordinate validation accuracy across nine equally weighted fold-by-corruption conditions. Equal accuracy favors smaller $\gamma$, then smaller $\eta$. Each fold fit its own training center, projection and neighbor model before evaluating its clean validation rows.
+
+\begin{table}[H]\small\centering
+\caption{Mean development accuracy (\%) over the nine fold-by-corruption conditions. Each cell summarizes three development folds and three training corruption levels. The no-smoothing check occupies the $\gamma=0$ column.}
+\label{tab:tuning}
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$\eta$ & $\gamma=0$ & $\gamma=0.03$ & $\gamma=0.3$ & $\gamma=3$\\
+\midrule
+\validationrows
+\bottomrule
+\end{tabular}
+\end{table}
+
+Among positive graph penalties, $(0.01,0.03)$ achieved the highest mean, 94.83\%. The corresponding $(0.001,0.03)$ result was 94.81\%, a difference of only 0.02 percentage points after rounding. Every $\gamma=3$ entry was below every $\gamma=0.03$ entry. The grid therefore shows clearer sensitivity to the largest smoothing penalty than to the choice between the two leading positive-penalty settings. The no-smoothing check independently selected $\eta=0.01$ at 94.79\%, the same $\eta$ used in the matched ablation. The complete grid and fitted projections were saved before test scoring.
+
+Setting $\gamma=0$ makes Eq.~\eqref{eq:spd} diagonal and gives $p_i=|w_i|v_i/(|w_i|+\eta)$. At a fixed sign vote, this factor attenuates coordinates with smaller current magnitudes. Positive $\gamma$ adds the off-diagonal element $-\gamma\sqrt{|w_iw_j|}$ for adjacent pixels. The sign votes and sparsity weighting are shared across both variants, which isolates the added graph term.
+
+Let $C_{ij}$ count official test images with true digit $i$ and predicted digit $j$. For class $c$, let $n_c=\sum_j C_{cj}$ and $\hat n_c=\sum_i C_{ic}$. The reported scores are
+\[
+\mathrm{Accuracy}=\frac{\sum_c C_{cc}}{\sum_c n_c},\qquad
+\mathrm{Balanced\ accuracy}=\frac{1}{10}\sum_c\frac{C_{cc}}{n_c},\qquad
+\mathrm{Macro\!-\!F1}=\frac{1}{10}\sum_c\frac{2C_{cc}}{n_c+\hat n_c}.
+\]
+Overall accuracy weights images equally. Balanced accuracy gives each digit the same weight by averaging its recall. Macro-F1 also penalizes assigning too many other digits to a class. All ten digits are represented in the official split, with 174 to 183 images per class.
+
+For the corrupted conditions, each accuracy entry averages five evaluations on the same official test images. The sample standard deviation describes variation induced by training masks. A paired contrast first subtracts the two methods' accuracies for each shared mask and then averages those differences. This comparison uses the same corrupted images in both fits and the same test examples in both evaluations. Neither the sample standard deviation nor the paired range measures sampling uncertainty across new writers.
+
+\clearpage
+\subsection{Recognition and the smoothing ablation}
+
+\begin{table}[H]
+\small
+\caption{Official test performance (\%). Clean training is a single fit. Corrupted accuracy entries are mean $\pm$ sample SD across five matched training masks. Balanced accuracy and macro-F1 columns give means at 50\% corruption.}
+\centering
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & & \multicolumn{3}{c}{Accuracy by training corruption} &
+ \multicolumn{2}{c}{At 50\%} \\
+\cmidrule(lr){3-5}\cmidrule(l){6-7}
+Method & Coord. & Clean & 25\% & 50\% & Bal.\ acc. & Macro-F1 \\
+\midrule
+\maintablerows
+\bottomrule
+\end{tabular}
+\label{tab:results}
+\end{table}
+
+\reportfigure{comparison}{Held-out recognition and matched contrasts. A, method means with one point per corruption draw at 25\% and 50\%. The raw-pixel reference uses 64 coordinates. B, run-level differences in percentage points (pp) using the same mask within a pair. Diamonds mark the means.}{fig:comparison}
+
+\textbf{RSSPCA versus classical PCA.}
+The mean differences were $+0.22$ pp on clean training, $+0.17$ pp at 25\% corruption and $-0.37$ pp at 50\%. The paired ranges were $[-0.39,+1.00]$ pp and $[-1.00,+0.22]$ pp at the two corruption levels. RSSPCA led PCA on three of five masks at 25\% and one of five at 50\%. From clean to 50\% corruption, RSSPCA fell by 4.01 pp and PCA by 3.42 pp, so the absolute-score and graph penalties did not yield a smaller loss under this training perturbation.
+
+\textbf{Smoothness at fixed sparsity.}
+Adding the graph term increased accuracy by $0.20$ pp on average at 25\% corruption and decreased it by $0.32$ pp at 50\%. The paired ranges were $[-0.11,+0.67]$ and $[-1.61,+0.11]$ pp. Changing only $\gamma$ isolates the grid regularizer in the update. It also changes fitted directions and their deflation trajectory, so the comparison measures the full representation. The accuracy benefit depended on corruption severity.
+
+\textbf{Matched supervised control.}
+Fisher LDA led the eight-score comparison under all three conditions and beat RSSPCA on all five masks at 50\% corruption, by $1.12$ pp on average. That advantage is consistent with using labels to retain class-separating directions. The raw-pixel reference led overall with 64 coordinates and lost only 0.57 pp from clean to 50\% training corruption. The comparison with raw pixels therefore also reflects the cost of compressing this small image space.
+
+\clearpage
+\subsection{Feature budget, cost and loading diagnostics}
+
+\reportfigure{sensitivity}{Feature budget and CPU fit time at 50\% corrupted training. A, mean $\pm$ sample SD on five paired corruption draws. The horizontal dotted line gives the raw-pixel mean at 64 coordinates. B, each point is a fit-time measurement at eight coordinates (64 for pixels), with medians shown by outlined markers.}{fig:sensitivity}
+
+At 50\% corruption, RSSPCA rose from 73.72\% at four coordinates to 90.76\% at eight, 95.78\% at 16 and 97.00\% at 24. Classical PCA reached 96.92\% at 24. The 64-coordinate raw reference reached 97.26\%. The gain from retaining more coordinates was substantially larger than the difference between robust and classical PCA at the same budget. These dimensions were specified before testing, and the primary four-way reduced comparison remains at eight.
+
+Median fit times at eight coordinates were 69.5 ms (RSSPCA), 75.1 ms (no smoothness), 10.4 ms (PCA) and 14.9 ms (LDA). Raw pixels took 2.3 ms. Fit times cover projection and 3-NN training after mask construction. Batched prediction averaged 15--16 ms at eight coordinates and 27 ms for raw pixels.
+
+\reportfigure{loadings}{Fixed seed 7301 with 50\% corrupted training. A, the first three loadings share one signed color scale. Row labels include mean grid energy across the first eight unit directions. B, step norm by iteration for the first eight loadings of each robust arm. The dotted line marks the stopping tolerance.}{fig:loadings}
+
+At 50\% corruption, smoothing lowered mean eight-direction grid energy from 2.041 to 1.906 (6.6\%). The share of entries with $|w_p|\le10^{-3}$ fell from 23.1\% to 20.0\%, consistent with weight spreading to neighbors. Both arms met tolerance for all 88 rank-eight directions. In the 24-coordinate fits, 2 of 264 RSSPCA directions and 5 of 264 no-smoothing directions reached the cap and were retained.
+
+\clearpage
+\subsection{Class errors and interpretation}
+
+\reportfigure{class_errors}{Per-class behavior for the prespecified seed 7301 at 50\% corrupted training and eight coordinates. A, RSSPCA confusion matrix, with raw counts over row-normalized color. B, recall by true digit for the classical and RSSPCA projections.}{fig:errors}
+
+RSSPCA recovered 118 of 174 eights (67.8\%) and 133 of 180 nines (73.9\%) in this draw. The largest off-diagonal counts were eight predicted as one (24) and nine predicted as three (20). LDA recalled 78.2\% of eights and 78.3\% of nines in the same draw. Table~\ref{tab:recall} puts that example in context. Mean RSSPCA recall remained lower than PCA and LDA for both digits across the five masks, although individual ranges overlap. Eight-coordinate embeddings may discard stroke details used to separate some digits. The confusion counts cannot identify which details were lost.
+
+\begin{table}[H]\small\centering
+\caption{Descriptive follow-up on recall (\%) for digits 8 and 9. Each mean and range uses five 50\% training corruption masks, the same test images and eight coordinates. The two classes are examined because they account for the largest recall deficits in Figure~\ref{fig:errors}.}
+\label{tab:recall}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{Digit 8, $n=174$} & \multicolumn{2}{c}{Digit 9, $n=180$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Method & Mean & Range & Mean & Range\\
+\midrule
+\classrecallrows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Limitations.}
+The study uses one low-resolution digit dataset and one official split. Validation can share writers across folds, because the public file lacks per-row writer IDs. The source-defined holdout is writer-disjoint, but the design cannot estimate how the chosen parameters would vary across other groups of writers. Synthetic patches affect both the fitted subspace and stored exemplars. A factorial training test with independently perturbed projection-fit and neighbor-store images would distinguish those mechanisms. Exact zeros, the residual start and the iteration limit can affect the learned directions. Generalization to real occlusion, higher-resolution images and other classifiers remains open.
+
+\clearpage
+\subsection*{Conclusion}
+
+RSSPCA's grid penalty reduced loading roughness on Optdigits. Its recognition accuracy stayed close to PCA and the relative advantage changed across corruption rates. LDA led the eight-coordinate comparison. Under heavy training corruption, increasing the coordinate budget helped each PCA-family method more than changing the projection objective.
+
+\section{What I Have Learnt from This AI Assignment}
+
+\noindent\colorbox{pale}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+\textbf{Student-authored reflection pending.} Paco, Sou Chak Tong will supply the personal learning reflection before submission. The items below identify evidence in the draft that the student can draw on.}}\par
+
+A reflection can discuss how the source and numerical checks changed trust in an AI-generated implementation, using the two-pixel update or the pre-test lock as an example. It can also connect a personal observation to the study's central result. The smoothness term behaved as intended on the loadings, while recognition still depended on the coordinate budget and training corruption. Any account of what the student learned or would do differently belongs in the student's own words.
+
+\section{Webpage Link of the Source Codes}
+
+\noindent\colorbox{pale}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+\textbf{Public GitHub URL pending.} This review draft accompanies the local source. The public link will be inserted after the repository has been published and checked.}}\par
+
+\begin{table}[H]\small
+\caption{Evidence available in the review workspace. Paths are relative to the project root.}
+\begin{tabularx}{\linewidth}{@{}P{54mm}Y@{}}
+\toprule
+Path & Reviewer use \\
+\midrule
+\path{README.md}, \path{configs/study.json} &
+Environment and run commands, fold and corruption seeds, feature budgets and stopping settings.\\
+\path{docs/algorithm_selection.md}, \path{docs/ai_usage.md} &
+Selection gate, prompt and search trail, and recorded chronology from method choice to test scoring.\\
+\path{results/validation.json}, \path{results/selection.json}, \path{results/frozen.json} &
+Full development scores, selected parameters, fitting-source hashes and frozen artifact digests.\\
+\path{results/predictions.npz}, \path{results/final.json} &
+Official test row IDs, ground truth and keyed predictions, with per-run confusion counts and timing.\\
+\path{report/report.tex}, \path{src/figures.py}, \path{src/summarize.py} &
+Report entry point and the commands that regenerate its figures and numeric tables from the archives.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+To replay from the project root, use the \texttt{src.experiment} module to fetch the development data, then run \texttt{smoke}, \texttt{tune} and \texttt{prepare}. Once the freeze manifest exists, run \texttt{fetch-tes}, \texttt{final} and \texttt{verify} in a fresh output directory. For a report-only check, \texttt{src.summarize} reconstructs metrics from the archived predictions and official labels. The figures can be exported separately using \texttt{src.figures}. The UCI data source is linked in the references.

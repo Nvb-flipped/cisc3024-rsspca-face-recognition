@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+/.agents/
+.venv/
+data/*
+!data/README.md
+.tmp/
+report/build/
+results/reproduction/
+local-image-galleries/

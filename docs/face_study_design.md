@@ -1,0 +1,24 @@
+# Olivetti study design
+
+Locked 17 November 2026, 14:57:01 UTC+8, after the feasibility gate passed and before the main face runner or any face-test evaluation. The exact settings are in [faces.json](../configs/faces.json). The original digit experiment retains its separate Prompt 01 locks.
+
+## Acceptance and source
+
+The fit-only gate requires relative SPD residual below $10^{-12}$, relative direction agreement with the independent nonsymmetric computation below $10^{-11}$, correct zero-coordinate and sign behavior, residual orthogonality, unit columns, stable repeat weights and projector idempotence. Both classical baselines must exceed 35% on the fit-only internal check and all reduced methods must support 24 scores. The tested 24-direction single-thread RSSPCA fit must take under 10 s and track under 64 MiB of allocations. All checks passed. Directions reaching the predeclared cap are recorded and retained. [Gate output](../results/faces/gate.json)
+
+Use the 64×64 Olivetti derivative, reading its pinned archive in scikit-learn's orientation. Divide by fixed byte scale 255, box-filter with 4×4 blocks and decimate by four per axis, producing a 16×16 array. Reuse that representation in every arm. No fitted range or standardization. [AT&T source and attribution](https://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html) · [Derivative documentation](https://scikit-learn.org/stable/datasets/real_world.html#the-olivetti-faces-dataset)
+
+## Split, settings and outcomes
+
+- **Closed set.** For each of 40 identities, permute the ten source indices with NumPy default RNG and seed 20261117, assign six fit/two validation/two test, then sort each partition. Tune on 240 fit and 80 clean validation rows. Refit on their union of 320, hash the model archive and configuration, then score the fixed 80 clean test images. Every split contains every known identity.
+- **Training perturbation.** Select exactly the floor of fraction × count at fractions 0, 0.25 and 0.50. Replace one uniformly placed 8×8 patch per selected 16×16 image by independent equally likely values 0 and 1. Share the mask across methods and use nested severity for each seed. Feed the same corrupted rows to projection fitting and neighbor storage. Keep validation and test clean. Use validation seed 8101, final corruption seeds 8301–8305, and one deterministic clean fit.
+- **Comparison.** Raw pixels at 256 coordinates, PCA, SVD Fisher LDA, RSSPCA and no smoothing. All reduced arms use 8, 16 and 24 coordinates, with 16 primary. Use uniform Euclidean 3-NN with common row order and unstandardized scores. Fisher LDA uses labels for projection fitting and has the nominal ceiling 39.
+- **Selection.** Try eta {0.001, 0.01, 0.05} and gamma {0.03, 0.3} at 16 coordinates. Maximize mean clean-validation accuracy with equal weight on the three training corruption levels. Ties favor smaller gamma then eta. The ablation fixes gamma at zero and uses the selected eta. Use a sign-invariant tolerance of 0.0001, a 100-step cap and one BLAS/OpenMP thread.
+- **Recognition.** Accuracy primary, balanced accuracy, macro-F1, per-identity errors, paired differences by seed, and measured fit/predict wall time. Accuracy equals balanced accuracy given two images per identity. Report sample SD and paired ranges over the five training masks. The masks reuse one test set and do not establish uncertainty across new identities or splits.
+- **Reconstruction.** For PCA, RSSPCA and no smoothing, compute a thin QR basis of the fitted loading span for each coordinate budget. Project a clean test image about the fitted training mean and measure per-image pixel MSE against that same clean image. Keep unbounded values for metrics, with grayscale clipping only for display. The experiment measures representation after training corruption and uses no reconstruction metric for tuning.
+
+## Figures and verification
+
+Show the chronological prompt workflow and mechanism, a face/mask gallery using the first four stored training rows corrupted at 50% with seed 8301, and signed components 1–4 of all three PCA-family arms under the same condition with a common scale. Show recognition across the training corruption conditions with matched-mask points, budget and reconstruction sensitivity, and diagnostics of loading energy and iteration caps. The test reconstruction gallery uses the smallest held-out source index of each predeclared identity 0, 9, 19, 29 and 39, under seed 8301, 50%, rank 16. Attribute all face imagery.
+
+Independently check row assignments and duplicate features, paired masks, confusion metrics and reconstruction from saved arrays. Replay the full locked procedure into a separate output directory and compare selections, predictions, loadings and reconstruction errors. Leave held-out results as the evaluation record.

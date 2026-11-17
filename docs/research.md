@@ -1,0 +1,31 @@
+# Candidate research
+
+Search date: 17 November 2026 (Asia/Shanghai). Codex conducted a targeted candidate search for original 2024–2026 papers where PCA/LDA itself changes and the paper has a direct image application. This search was for assignment selection. Ranked returns were screened for primary papers, accessible equations, image protocols and code links.
+
+## Query record
+
+| Service | Exact query |
+| --- | --- |
+| Web search | `2025 robust sparse smooth principal component analysis RSSPCA face recognition` |
+| Web search | `2024 robust and sparse linear discriminant analysis face image objective robust sparse LDA` |
+| Web search | `2025 2026 robust two dimensional principal component analysis face recognition algorithm sparse Lp` |
+| Web search | `2024 2025 novel two dimensional PCA image recognition generalized weighted 2DPCA face recognition open access algorithm` |
+| Web search | `"Towards robust and sparse linear discriminant analysis for image classification" pdf RSLDA+ Liu Feng` |
+| Web search | `UCI optical recognition handwritten digits optdigits 3823 1797 CC BY 4.0 training test writer` |
+| Web search | `DLR-2DPCA Pengfei Bi GitHub double layer robust code` |
+| Literature search | `Robust Sparse Smooth Principal Component Analysis Wang Xie 2025 and Double Layer Robust 2DPCA Bi Chen image recognition 2025` |
+| Literature search | `Cellwise robust and sparse principal component analysis Pfeiffer 2025 SCRAMBLE and Towards robust and sparse linear discriminant analysis for image classification Liu Feng 2024` |
+| Web search | `"Double Layer Robust 2DPCA" "ORL" UMIST datasets` |
+| Web search | `site:scikit-learn.org stable PCA singular value decomposition LinearDiscriminantAnalysis eigen shrinkage KNeighborsClassifier documentation` |
+| Web search | `Fisher 1936 use of multiple measurements in taxonomic problems DOI Pearson 1901 lines planes closest fit principal component analysis DOI Kwak 2008 PCA L1 DOI` |
+
+Publisher and university full texts governed the shortlist. The literature lookup surfaced the SCRAMBLE arXiv record and older method leads. The publisher version supplied the SCRAMBLE citation. Older 2DPCA papers and 2025 preprints with unverified peer-reviewed status were excluded from the comparative decision. The 2024 LDA review in Nature Reviews Methods Primers was background only.
+
+## Primary sources and screened evidence
+
+- **Wang, Xie, Zhang, Li, Cai and Feng (2025)**, *Robust sparse smooth principal component analysis for face reconstruction and recognition*, PLOS One 20(5), e0323281, first published 27 May 2025. Sections 3.1–3.5 give the constrained absolute-score criterion, grid Laplacian, quadratic minorizer and normalized update. Sections 4–5 evaluate face reconstruction and nearest-neighbor recognition across six face collections. The training corruption and face splits in the paper differ from the Optdigits study. The authors discuss sensitivity to norm/constraint choice and report task-dependent gains. The GPL-3.0 MATLAB repository was inspected at `RSSPCA.m`, `Laplacian_matrix.m` and `classify_RSSPCA.m`. The upstream loop monitors an L2 score despite the L1 objective, uses original SVD initialization, and deflates with accumulated raw directions. Our code implements the equations independently and documents different stopping and deflation. [Paper](https://doi.org/10.1371/journal.pone.0323281) · [Reference code](https://github.com/yuzhounh/RSSPCA) · [Authors’ dataset deposit](https://figshare.com/articles/dataset/Benchmark_face_databases_for_face_recognition_and_reconstruction/27643026)
+- **Bi, Chen, Du, Sohrab and Gabbouj (2025)**, *Double Layer Robust 2DPCA: Joint Flexible Cut Norm and Adaptive Weighted Learning for Small Sample Size Image Recognition*, IEEE Transactions on Consumer Electronics 71(4), 10491–10506. Section III and Algorithm 1 in the accepted manuscript show a cut row-residual norm and adaptive sample weighting, updated jointly with an orthonormal right projection using an SVD/polar step. Section IV uses CMU PIE, GTSRB and MNIST for recognition and reconstruction. No author implementation was located by the targeted code query. UCI digits would support an implementation with feature-budget matching in multiples of eight, and classical 2DPCA is the natural ablation anchor. [DOI](https://doi.org/10.1109/TCE.2025.3602258) · [Accepted manuscript and refereed metadata](https://researchportal.tuni.fi/en/publications/double-layer-robust-2dpca-joint-flexible-cut-norm-and-adaptive-we/)
+- **Pfeiffer, Vana-Gür and Filzmoser (2025)**, *Cellwise robust and sparse principal component analysis*, Advances in Data Analysis and Classification, online 7 November 2025. Sections 2–3 replace squared cellwise reconstruction loss by a robust loss, add elastic-net regularization and fit orthonormal loadings using a projected Riemannian gradient and QR retraction. Section 5.2 evaluates robust principal component regression on wear-scar images, omitting the sparsity penalty in that application. An author R package is available under MIT. Optdigits supports a controlled adaptation with spatial patches, though the loss is cellwise and has no pixel adjacency term. [Paper](https://doi.org/10.1007/s11634-025-00656-3) · [R package](https://github.com/piapfeiffer/scramble)
+- **Liu, Feng, Xiu and Liu (2024)**, *Towards robust and sparse linear discriminant analysis for image classification*, Pattern Recognition 153, 110512. Publisher metadata verifies the use of L0 and L2,0 penalties and an ADMM solver with threshold operators. The publisher preview stops short of a verifiable complete update sequence and no author code or accessible complete manuscript surfaced in the targeted follow-up, so exact objective blocks and cost were left open. [Publisher article](https://www.sciencedirect.com/science/article/pii/S0031320324002632)
+
+Dataset source: Ethem Alpaydin and Cenk Kaynak, *Optical Recognition of Handwritten Digits* (1998), UCI Machine Learning Repository. The official 30-writer development and 13-writer test partitions and CC BY 4.0 terms are stated by the source. [Dataset DOI](https://doi.org/10.24432/C50P49) · [Official data files](https://archive.ics.uci.edu/ml/machine-learning-databases/optdigits/)

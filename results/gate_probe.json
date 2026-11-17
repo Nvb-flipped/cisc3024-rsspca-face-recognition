@@ -1,0 +1,65 @@
+{
+  "update": {
+    "raw_update_exact": [
+      "132/71",
+      "200/71"
+    ],
+    "normalized_update": [
+      0.5508422083307387,
+      0.8346094065617252
+    ],
+    "linear_residual": 6.280369834735101e-16,
+    "min_system_eigenvalue": 0.8725082782364626,
+    "zero_coordinate_update": [
+      1.176470588235294,
+      0.0
+    ],
+    "sphere_tangent_residual": 0.375888666061862
+  },
+  "development_only": {
+    "source_sha256": "e1b683cc211604fe8fd8c4417e6a69f31380e0c61d4af22e93cc21e9257ffedd",
+    "shape": [
+      3823,
+      64
+    ],
+    "pixel_range": [
+      0,
+      16
+    ],
+    "development_class_counts": [
+      376,
+      389,
+      380,
+      389,
+      387,
+      376,
+      377,
+      387,
+      380,
+      382
+    ],
+    "development_unique_images": 3823,
+    "constant_pixels": 2,
+    "fit": 3058,
+    "validation": 765,
+    "validation_class_counts": [
+      75,
+      78,
+      76,
+      78,
+      78,
+      75,
+      75,
+      78,
+      76,
+      76
+    ],
+    "baseline_pca8_3nn_validation_accuracy": 0.9607843137254902,
+    "prototype_rsspca_iterations": 27,
+    "prototype_rsspca_last_step": 7.967417382691517e-05,
+    "prototype_rsspca_mean_absolute_score_initial": 0.6697367413021846,
+    "prototype_rsspca_mean_absolute_score_final": 0.6709266240421069,
+    "prototype_rsspca_seconds_including_unique_count": 0.009833699965383857,
+    "full_development_float64_bytes": 1957376
+  }
+}

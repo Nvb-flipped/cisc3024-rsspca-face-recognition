@@ -1,0 +1,92 @@
+{
+  "picked": {
+    "eta": 0.001,
+    "gamma": 0.3,
+    "mean_accuracy": 0.7125
+  },
+  "config": {
+    "split_seed": 20261117,
+    "image_shape": [
+      16,
+      16
+    ],
+    "patch_size": 8,
+    "fractions": [
+      0,
+      0.25,
+      0.5
+    ],
+    "validation_seed": 8101,
+    "corruption_seeds": [
+      8301,
+      8302,
+      8303,
+      8304,
+      8305
+    ],
+    "eta": [
+      0.001,
+      0.01,
+      0.05
+    ],
+    "gamma": [
+      0.03,
+      0.3
+    ],
+    "neighbors": 3,
+    "ranks": [
+      8,
+      16,
+      24
+    ],
+    "primary_rank": 16,
+    "step_tolerance": 0.0001,
+    "max_iterations": 100,
+    "threads": 1,
+    "gallery_identity_ids": [
+      0,
+      9,
+      19,
+      29,
+      39
+    ]
+  },
+  "source_sha256": "b612fb967f2dc77c9c62d3e1266e0c73d5fca46a4b8906c18e454d41af987794",
+  "code": {
+    "face_study.py": "59e172f51d8d8caefd4b25fcb78371fc16b8422a8ee364716b7d9106b751be41",
+    "face_data.py": "a2da83f9570f6bed14d0b905ca0eed57ff20bb30fead02717ef815a371e20a77",
+    "data.py": "97cb5a9d668e01a273d90d17dd0bd8452c570aaad6cfcb8343ce7c0e53961690",
+    "projectors.py": "29e61b36801ac6ff8872615ad4060398e92080ad471623149d65933374ed1782",
+    "experiment.py": "cd953448f0ef86153efc7a5508b9f164c3d881e054631d3fdf68e82c2ffd5baf"
+  },
+  "environment": {
+    "device": "CPU",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor_identifier": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+    "logical_processors": 16,
+    "python": "3.14.3",
+    "numpy": "2.4.4",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0",
+    "threadpools": [
+      {
+        "internal_api": "openblas",
+        "user_api": "blas",
+        "num_threads": 1,
+        "version": "0.3.31.188.0"
+      },
+      {
+        "internal_api": "openblas",
+        "user_api": "blas",
+        "num_threads": 1,
+        "version": "0.3.31.dev"
+      },
+      {
+        "internal_api": "openmp",
+        "user_api": "openmp",
+        "num_threads": 1,
+        "version": null
+      }
+    ]
+  }
+}

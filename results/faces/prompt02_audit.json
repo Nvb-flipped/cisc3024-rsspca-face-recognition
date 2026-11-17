@@ -1,0 +1,44 @@
+{
+  "matched_trial_counts": 18,
+  "validation_correct_sum": 171,
+  "validation_score_denominator": 240,
+  "tied_parameter_pairs": [
+    [
+      0.001,
+      0.3
+    ],
+    [
+      0.01,
+      0.3
+    ]
+  ],
+  "distance_boundaries": 0,
+  "predictions": 11440,
+  "reconstructed_runs": 99,
+  "recognition_runs": 143,
+  "max_pca_eigen_residual": 2.4136029270256448e-15,
+  "min_lda_loading_rank": 24,
+  "primary_class_vote_ties": {
+    "Pixels": 206,
+    "PCA": 261,
+    "LDA": 9,
+    "No smoothness": 245,
+    "RSSPCA": 220
+  },
+  "fixed_point": {
+    "No smoothness": {
+      "directions": 264,
+      "capped": 0,
+      "next_above_tolerance": 0,
+      "max_next_step": 9.606931096925632e-05,
+      "traces_with_score_decrease": 89
+    },
+    "RSSPCA": {
+      "directions": 264,
+      "capped": 0,
+      "next_above_tolerance": 1,
+      "max_next_step": 0.00010234867207679961,
+      "traces_with_score_decrease": 245
+    }
+  }
+}

@@ -1,0 +1,8 @@
+# Preserve the bytewise provenance checks on Windows and Unix checkouts.
+src/*.py text eol=lf
+results/selection.json -text
+results/splits.json -text
+results/fit_records.json -text
+results/faces/selection.json -text
+results/faces/split.json -text
+results/faces/fits.json -text

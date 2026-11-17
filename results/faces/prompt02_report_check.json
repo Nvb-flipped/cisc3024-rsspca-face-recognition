@@ -1,0 +1,72 @@
+{
+  "pdf": "report/report.pdf",
+  "sha256": "4ce81bad6c58e8ce2341ec8687ec306d0b7473276b4aa5cd77ff251ac8b73dbf",
+  "pages": 18,
+  "visually_verified_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "headings": {
+    "How AI Found the Algorithm": 1,
+    "Algorithm Description": 5,
+    "How AI Implemented the Algorithm": 7,
+    "Experiment Settings and Results": 9,
+    "What I Have Learnt from This AI Assignment": 16,
+    "Webpage Link of the Source Codes": 17
+  },
+  "latin_modern_font_names": [
+    "LMMono10-Regular-Identity-H",
+    "LMRoman10-Bold",
+    "LMRoman10-Bold-Identity-H",
+    "LMRoman10-Italic-Identity-H",
+    "LMRoman10-Regular",
+    "LMRoman10-Regular-Identity-H",
+    "LatinModernMath-Regular",
+    "LatinModernMath-Regular-Identity-H"
+  ],
+  "figure_pages": [
+    1,
+    4,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "figures_passing_strict_collision_and_text_audits": 8,
+  "bibtex_warnings": 0,
+  "reference_targets": [
+    "https://doi.org/10.1007/s11634-025-00656-3",
+    "https://doi.org/10.1016/j.patcog.2024.110512",
+    "https://doi.org/10.1080/14786440109462720",
+    "https://doi.org/10.1109/TCE.2025.3602258",
+    "https://doi.org/10.1109/TPAMI.2008.114",
+    "https://doi.org/10.1111/j.1469-1809.1936.tb02137.x",
+    "https://doi.org/10.1371/journal.pone.0323281",
+    "https://doi.org/10.24432/C50P49",
+    "https://doi.org/10.48550/arXiv.2609.00065",
+    "https://github.com/yuzhounh/RSSPCA",
+    "https://scikit-learn.org/stable/datasets/real_world.html#the-olivetti-faces-dataset",
+    "https://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html"
+  ],
+  "face_accuracy_and_reconstruction_tables_confirmed": true,
+  "face_and_digit_frozen_artifacts_verified": true,
+  "independent_face_audit": "results/faces/prompt02_audit.json"
+}

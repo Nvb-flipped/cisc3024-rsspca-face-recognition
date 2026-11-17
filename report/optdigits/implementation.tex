@@ -1,0 +1,57 @@
+\section{How AI Implemented the Algorithm}
+
+Codex inspected the authors' GPL-3.0 MATLAB reference \citep{matlab} and implemented the paper equations independently with NumPy and SciPy. The reference initializes with axes from the original SVD, stops using a relative change in the L2 score norm and uses accumulated raw directions in deflation. This project initializes each component with the leading covariance eigenvector of the \emph{current residual}. It uses the sign-invariant step size $\min(\|w^+-w\|_2,\|w^++w\|_2)$ and stops at $10^{-4}$ or 100 updates. The code records both step size and mean absolute score. The largest-magnitude entry is made nonnegative for display. With equal leading eigenvalues, the initialization can depend on the numerical basis picked by the solver.
+
+\subsection{Deflation, coordinate scores and cost}
+
+Write $W_j=[w_1,\ldots,w_j]$ and let $Q_j$ have orthonormal columns spanning $W_j$, maintained by twice removing the existing basis projection from each new column before normalizing. We recompute \(R_j=X-(XQ_j)Q_j^\top\). Then $R_j W_j=0$ up to roundoff. The expression $I-W_jW_j^\top$ is an orthogonal projector only when the columns of $W_j$ are orthonormal. The raw columns can remain oblique, so prediction uses $W_k^\top(a-\mu)$ and retains the learned metric on those coordinates. The implementation rejects excess dimensions, exhausted residuals, dependent new directions and an update with zero norm.
+
+For two images $a$ and $b$, squared Euclidean distance between the raw scores is
+\[
+ \|W_k^\top(a-b)\|_2^2=(a-b)^\top W_kW_k^\top(a-b).
+\]
+The common mean cancels in this calculation. Flipping the sign of a loading leaves this distance unchanged. Using the orthonormal basis $Q_k$ for classification would instead assign equal weight to all directions in the learned span and could change which neighbors vote. The two bases therefore have distinct roles in the implementation.
+
+For $k$ components and $T$ updates per component, a dense implementation at $n\ge d$ costs $O\!\left(k(nd^2+d^3)+kT(nd+d^3)+ndk^2\right)$ time. The terms bound residual covariance/eigenvector initialization, sign votes and SPD solves, and growing orthogonal projections. Working storage is $O(nd+d^2+dk)$ plus diagnostic traces. A test score costs $O(dk)$ per image and brute-force 3-NN compares $k$-coordinate scores against $n$ training examples. The $64\times64$ system is small enough for dense solves on this dataset.
+
+\begin{table}[H]\small
+\caption{Pseudocode and equation-to-code mapping. Fit inputs are training rows, labels, penalties and the feature budget. Each returned vector has 64 entries.}
+\begin{tabularx}{\linewidth}{@{}P{9mm}YP{53mm}@{}}
+\toprule
+Step & Operation & Implementation \\
+\midrule
+1 & Compute $\mu$, center training rows, set $R\gets X$, and form $L$. & \texttt{fit\_rsspca}, \texttt{grid\_laplacian} \\
+2 & For each component, initialize $w$ from the leading residual covariance eigenvector. & \texttt{fit\_rsspca} \\
+3 & Form $v,D,H,M$, solve Eq.~\eqref{eq:spd}, normalize, and repeat to the step threshold or cap. & \texttt{fixed\_point}, \texttt{iterate\_component} \\
+4 & Append $w$ to $W$ and reproject $X$ away from its span. & \texttt{fit\_rsspca} \\
+5 & Project train and test with the saved $\mu,W_k$. Vote among the 3 closest training scores. & \texttt{Projection.transform}, \texttt{classifier} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\subsection{Verification and execution}
+
+The verification suite tests mathematical invariants against independent references and exercises the input boundaries that could silently change an experiment. All ten collected tests passed. The small development smoke run used 300 fitting rows and 50 validation rows, exercising all five methods before the complete run.
+
+\begin{table}[H]\small
+\caption{Representative verification checks from \texttt{tests/test\_pipeline.py}. Numerical tolerances are absolute floors used by the assertions.}
+\label{tab:checks}
+\begin{tabularx}{\linewidth}{@{}P{33mm}Y@{}}
+\toprule
+Check & Evidence and the failure it can expose\\
+\midrule
+Graph geometry & A $2\times3$ grid has seven unique edges, zero row sums, a nonnegative spectrum up to roundoff and no edge spanning a row boundary. A hand-summed edge energy checks the flattening convention.\\
+Update equivalence & The SPD solve is compared with an independent nonsymmetric solve at three penalty pairs, including $\eta=10^{-9}$ with $\gamma=0$ and $\eta=10^{-8}$ with $\gamma=100$. The test uses a $10^{-10}$ absolute tolerance floor after aligning signs and verifies that exact zero coordinates remain zero.\\
+Deflation and prefix & Tests compare repeated loading fits and the first loading extracted on its own. An independently computed basis gives a residual orthogonal to the learned span within $10^{-13}$. A rank-deficient input must raise.\\
+Classical baselines & PCA is checked against the scikit-learn subspace and the covariance eigen-equation. The Fisher SVD subspace is checked against a generalized eigenproblem and adding a constant pixel must preserve its scores up to sign.\\
+Data and selection & The two corruption severities share row IDs, patch locations and values on their intersection. A serialization round trip checks mask replay. A tie in mean accuracy exercises the stated selection order.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{The boundary between fitting and test scoring.}
+The validation stage checks the development-file digest, writes the folds and records the chosen parameters. The preparation stage refits using the full development file and saves the centers, loading matrices and training masks. A manifest hashes the selection, split, fitted and fit-record files. The final stage verifies those hashes and the fitting-code hashes before loading the official test file. It reconstructs the training exemplars from the saved masks and projects both partitions with the frozen centers and weights.
+
+\textbf{Replay and metric checks.}
+The executed run used Windows 11, Python 3.14.3, NumPy 2.4.4, SciPy 1.18.0 and scikit-learn 1.9.0 on CPU, with BLAS and OpenMP limited to one thread. An independent NumPy check reconstructed all confusion matrices and metrics using the saved predictions and official labels. A separate run repeated tuning, fitting and evaluation and matched all 165 prediction arrays exactly within that environment. Fit times are wall-clock measurements and can vary across runs.
