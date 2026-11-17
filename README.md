@@ -20,7 +20,7 @@ The corrupted scores are means across five paired training masks on one fixed se
 - [Human-directed face pivot and provenance](docs/face_pivot_decision.md), [locked face design](docs/face_study_design.md), and [training-only gate output](results/faces/gate.json)
 - [Selected parameters](results/faces/selection.json), [freeze](results/faces/freeze.json), [per-run results](results/faces/final.json), [replay](results/faces/replay.txt) and [face figures](results/faces/figures)
 - [Original method search](docs/research.md), [Prompt 01 selection gate](docs/algorithm_selection.md), [Optdigits report archive](report/optdigits/README.md) and [digit results](results/summary.json)
-- [Documentation pages](docs/wiki/Home.md)
+- [Public Wiki](https://github.com/Nvb-flipped/cisc3024-rsspca-face-recognition/wiki) and [versioned documentation sources](docs/wiki/Home.md)
 - [Prompt 02 quality review](docs/quality_review.md) and [independent face checks](results/faces/prompt02_audit.json)
 
 The public edition includes the student's reflection, frozen evidence and figures from saved masks, learned loadings and errors. It credits AT&T Laboratories Cambridge and obtains source portraits separately. [Data access and attribution](data/README.md)
